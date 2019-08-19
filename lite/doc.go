@@ -69,19 +69,15 @@ block-skipping for efficient sourcing and verification of these data structures
 and updates to the validator set (see the DynamicVerifier for more
 information).
 
-The FullCommit is also declared in this package as a convenience structure,
-which includes the SignedHeader along with the full current and next
-ValidatorSets.
-
 Verifier
 
- Verifier validates a new SignedHeader given the currently known state. There
-re two different types of Verifiers provided.
+Verifier validates a new SignedHeader given the currently known state. There
+are two different types of Verifiers provided.
 
-erifier - given a validator set and a height, this Verifier verifies
-hat > 2/3 of the voting power of the given validator set had signed the
-ignedHeader, and that the SignedHeader was to be signed by the exact given
-alidator set, and that the height of the commit is at least height (or
+Verifier - given a validator set and a height, this Verifier verifies
+that > 2/3 of the voting power of the given validator set had signed the
+SignedHeader, and that the SignedHeader was to be signed by the exact given
+validator set, and that the height of the commit is at least height (or
 greater).
 
 DynamicVerifier - this Verifier implements an auto-update and persistence
