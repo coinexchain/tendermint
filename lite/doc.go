@@ -116,6 +116,15 @@ getting new data (Source), and NewMultiProvider(NewDBProvider("label",
 dbm.NewMemDB()), NewDBProvider("label", db.NewFileDB(...))) to store confirmed
 full commits (Trusted)
 
+Example of usage
+
+
+		node := rpcclient.NewHTTP(nodeAddr, "/websocket")
+		cert, err := verifying.NewProvider(chainID, home, node, logger, cacheSize, verifying.TrustOptions{})
+		if err != nil {
+				return errors.Wrap(err, "constructing verifying provider")
+		}
+
 
 How We Track Validators
 

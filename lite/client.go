@@ -1,4 +1,4 @@
-package verifying
+package lite
 
 import (
 	"bytes"
@@ -89,6 +89,25 @@ type Provider struct {
 var _ lite.UpdatingProvider = (*Provider)(nil)
 
 type nowFn func() time.Time
+
+func NewProvider(chainID, dataDir string, options *Option) *Provider {
+	vp := Provider{
+		chainID:              chainID,
+		pendingVerifications: make(map[int64]chan struct{}, sizeOfPendingMap),
+	}
+
+	for _, o := range options {
+		o(vp)
+	}
+
+	if vp.source == nil {
+		vp.source = lclient.NewHTTPProvider(chainID, remote)
+	}
+	trusted := lite.NewMultiProvider(
+		lite.NewDBProvider(memDBFile, dbm.NewMemDB()).SetLimit(cacheSize),
+		lite.NewDBProvider(lvlDBFile, dbm.NewDB(dbName, dbm.GoLevelDBBackend, rootDir)),
+	)
+}
 
 // NewProvider creates a Provider.
 //

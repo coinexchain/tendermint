@@ -23,13 +23,12 @@ func (e errUnexpectedValidators) Error() string {
 }
 
 type errUnknownValidators struct {
-	chainID string
-	height  int64
+	height int64
 }
 
 func (e errUnknownValidators) Error() string {
-	return fmt.Sprintf("Validators are unknown or missing for chain %s and height %d",
-		e.chainID, e.height)
+	return fmt.Sprintf("Validators are unknown or missing for height %d",
+		e.height)
 }
 
 type errEmptyTree struct{}
@@ -68,8 +67,8 @@ func IsErrUnexpectedValidators(err error) bool {
 }
 
 // ErrUnknownValidators indicates that some validator set was missing or unknown.
-func ErrUnknownValidators(chainID string, height int64) error {
-	return errors.Wrap(errUnknownValidators{chainID, height}, "")
+func ErrUnknownValidators(height int64) error {
+	return errors.Wrap(errUnknownValidators{height}, "")
 }
 
 func IsErrUnknownValidators(err error) bool {

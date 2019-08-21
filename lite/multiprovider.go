@@ -3,11 +3,16 @@ package lite
 import (
 	log "github.com/tendermint/tendermint/libs/log"
 	lerr "github.com/tendermint/tendermint/lite/errors"
-	"github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/lite/types"
 )
 
+type hasLogger interface {
+	SetLogger(log.Logger)
+}
+
 // multiProvider allows you to place one or more caches in front of a source
-// Provider. It runs through them in order until a match is found.
+// Provider.
+// It runs through them in order until a match is found.
 type multiProvider struct {
 	providers []PersistentProvider
 
@@ -26,12 +31,14 @@ func NewMultiProvider(providers ...PersistentProvider) PersistentProvider {
 func (mc *multiProvider) SetLogger(logger log.Logger) {
 	mc.logger = logger
 	for _, p := range mc.providers {
-		p.SetLogger(logger)
+		if pp, ok := p.(hasLogger); ok {
+			p.SetLogger(logger)
+		}
 	}
 }
 
 // SaveFullCommit saves on all providers, and aborts on the first error.
-func (mc *multiProvider) SaveFullCommit(fc FullCommit) (err error) {
+func (mc *multiProvider) SaveFullCommit(fc types.FullCommit) (err error) {
 	for _, p := range mc.providers {
 		err = p.SaveFullCommit(fc)
 		if err != nil {
@@ -41,30 +48,28 @@ func (mc *multiProvider) SaveFullCommit(fc FullCommit) (err error) {
 	return
 }
 
-// LatestFullCommit loads the latest from all providers and provides
-// the latest FullCommit that satisfies the conditions.
+// LatestFullCommit tries to get latest FullCommit from each provider and
+// returns the one with the greatest height.
 // Returns the first error encountered.
-func (mc *multiProvider) LatestFullCommit(chainID string, minHeight, maxHeight int64) (fc FullCommit, err error) {
+func (mc *multiProvider) LatestFullCommit() (fc types.FullCommit, err error) {
 	for _, p := range mc.providers {
-		var pfc FullCommit
-		pfc, err = p.LatestFullCommit(chainID, minHeight, maxHeight)
+		var pfc types.FullCommit
+		pfc, err = p.LatestFullCommit()
 		if lerr.IsErrCommitNotFound(err) {
 			err = nil
 			continue
 		} else if err != nil {
 			return
 		}
-		if fc == (FullCommit{}) {
+		if fc == (types.FullCommit{}) {
 			fc = pfc
 		} else if pfc.Height() > fc.Height() {
 			fc = pfc
 		}
-		if fc.Height() == maxHeight {
-			return
-		}
 	}
 
-	if fc == (FullCommit{}) {
+	if fc == (types.FullCommit{}) {
+		// should not happen usually
 		err = lerr.ErrCommitNotFound()
 		return
 	}
@@ -72,16 +77,27 @@ func (mc *multiProvider) LatestFullCommit(chainID string, minHeight, maxHeight i
 	return
 }
 
-// ValidatorSet returns validator set at height as provided by the first
-// provider which has it, or an error otherwise.
-func (mc *multiProvider) ValidatorSet(chainID string, height int64) (valset *types.ValidatorSet, err error) {
+// GetFullCommit tries to get FullCommit at height {height} from each provider
+// and returns the first found or ErrCommitNotFound if none of the providers
+// has it.
+// Returns the first error encountered.
+func (mc *multiProvider) GetFullCommit(height int64) (fc types.FullCommit, err error) {
 	for _, p := range mc.providers {
-		valset, err = p.ValidatorSet(chainID, height)
-		if lerr.IsErrUnknownValidators(err) {
+		var pfc types.FullCommit
+		pfc, err = p.GetFullCommit(height)
+		if lerr.IsErrCommitNotFound(err) {
 			err = nil
 			continue
+		} else if err != nil {
+			return
 		}
+		return pfc
+	}
+
+	if fc == (types.FullCommit{}) {
+		err = lerr.ErrCommitNotFound()
 		return
 	}
-	return nil, lerr.ErrUnknownValidators(chainID, height)
+
+	return
 }

@@ -1,24 +1,27 @@
 package lite
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/lite/types"
 )
 
-// Provider provides information for the lite client to sync validators.
+// Provider provides information for the lite client to sync.
 type Provider interface {
-	// LatestFullCommit returns the latest commit with minHeight <= height <=
-	// maxHeight.
-	// If maxHeight is zero, returns the latest where minHeight <= height.
-	// If maxHeight is greater than the latest height, the latter one should be returned.
-	LatestFullCommit(chainID string, minHeight, maxHeight int64) (FullCommit, error)
+	// ChainID returns the blockchain ID.
+	ChainID() string
 
-	// ValidatorSet returns the valset that corresponds to chainID and height.
-	// height must be >= 1.
-	ValidatorSet(chainID string, height int64) (*types.ValidatorSet, error)
+	// LatestFullCommit returns the latest FullCommit.
+	//
+	// If the provider fails to fetch the FullCommit due to the IO or other
+	// issues, an error will be returned.
+	LatestFullCommit() (types.FullCommit, error)
 
-	// SetLogger sets a logger.
-	SetLogger(logger log.Logger)
+	// GetFullCommit returns the FullCommit that corresponds to the given height.
+	//
+	// If the provider fails to fetch the FullCommit due to the IO or other
+	// issues, an error will be returned.
+	// If there's no FullCommit for the given height, ErrCommitNotFound will be
+	// returned.
+	GetFullCommit(height int64) (types.FullCommit, error)
 }
 
 // PersistentProvider is a provider that can also persist new information.
@@ -26,20 +29,21 @@ type PersistentProvider interface {
 	Provider
 
 	// SaveFullCommit saves a FullCommit (without verification).
-	SaveFullCommit(fc FullCommit) error
+	SaveFullCommit(fc types.FullCommit) error
 }
 
 // UpdatingProvider is a provider that can update itself w/ more recent commit
 // data.
-type UpdatingProvider interface {
-	Provider
+//type UpdatingProvider interface {
+//	Provider
 
-	// Update internal information by fetching information somehow.
-	// UpdateToHeight will block until the request is complete, or returns an
-	// error if the request cannot complete. Generally, one must call
-	// UpdateToHeight(h) before LatestFullCommit(_,h,h) will return this height.
-	//
-	// NOTE: Behavior with concurrent requests is undefined. To make concurrent
-	// calls safe, look at the struct `ConcurrentUpdatingProvider`.
-	UpdateToHeight(chainID string, height int64) error
-}
+//	// Update internal information by fetching information somehow.
+//	// UpdateToHeight will block until the request is complete, or returns an
+//	// error if the request cannot complete. Generally, one must call
+//	// UpdateToHeight(h) before GetFullCommit(h) or LatestFullCommit() will
+//	// return this height.
+//	//
+//	// NOTE: behavior with concurrent requests is undefined. To make concurrent
+//	// calls safe, look at ConcurrentProvider.
+//	UpdateToHeight(height int64) error
+//}
