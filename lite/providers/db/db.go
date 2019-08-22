@@ -1,4 +1,4 @@
-package providers
+package db
 
 import (
 	"fmt"
@@ -26,8 +26,8 @@ type DB struct {
 	logger log.Logger
 }
 
-// NewDB returns a DB provider.
-func NewDB(chainID string, db dbm.DB) *DBProvider {
+// New returns a DB provider.
+func New(chainID string, db dbm.DB) *DBProvider {
 	// NOTE: when debugging, this type of construction might be useful.
 	// db = dbm.NewDebugDB("db provider "+cmn.RandStr(4), db)
 

@@ -1,26 +1,40 @@
-package lite
+package lite_test
 
 import (
 	"testing"
 	"time"
 
-	lclient "github.com/tendermint/tendermint/lite/client"
-	"github.com/tendermint/tendermint/lite/verifying"
+	"github.com/stretchr/testify/require"
+
+	"github.com/tendermint/tendermint/lite"
+	"github.com/tendermint/tendermint/lite/providers/http"
 )
 
-func TestExample_MinimalSetup(t *testing.T) {
-	// at least two sources is needed for security
-	sources = []Provider{
-		lclient.NewHTTPProvider(chainID, remote1),
-		lclient.NewHTTPProvider(chainID, remote2),
-	}
-	v, err := NewVerifier(
+func TestExample_Standard(t *testing.T) {
+	c, err := lite.NewClient(
 		chainID,
-		TrustOptions{TrustPeriod: 336 * time.Hour},
-		sources,
+		lite.TrustOptions{TrustPeriod: 336 * time.Hour},
+		[]string{remote1, remote2},
 	)
 	require.NoError(t, err)
 
-	err = v.Verify(newHeader)
+	commit, err := c.Commit()
+	require.NoError(t, err)
+	assert.Equal(t, chainID, commit.ChainID)
+}
+
+func TestExample_IBC(t *testing.T) {
+	sources = []lite.Provider{
+		ibc.New(chainID),
+	}
+	c, err := lite.NewVerifier(
+		chainID,
+		lite.TrustOptions{TrustPeriod: 24 * time.Hour},
+		sources,
+		Trusted(ibcKeeper{}),
+	)
+	require.NoError(t, err)
+
+	err = c.Verify(height)
 	require.NoError(t, err)
 }

@@ -1,4 +1,4 @@
-package providers
+package http
 
 import (
 	"fmt"
@@ -25,14 +25,14 @@ type HTTP struct {
 	logger log.Logger
 }
 
-// NewHTTP creates a HTTP provider, which is using the rpcclient.HTTP
+// New creates a HTTP provider, which is using the rpcclient.HTTP
 // client under the hood.
-func NewHTTP(chainID, remote string) *HTTP {
-	return NewHTTPWithClient(chainID, rpcclient.NewHTTP(remote, "/websocket"))
+func New(chainID, remote string) *HTTP {
+	return NewWithClient(chainID, rpcclient.NewHTTP(remote, "/websocket"))
 }
 
-// NewHTTPWithClient allows you to provide custom SignStatusClient.
-func NewHTTPWithClient(chainID string, client SignStatusClient) *HTTP {
+// NewWithClient allows you to provide custom SignStatusClient.
+func NewWithClient(chainID string, client SignStatusClient) *HTTP {
 	return &provider{
 		chainID: chainID,
 		client:  client,
