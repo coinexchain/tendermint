@@ -1,49 +1,46 @@
 package lite
 
-import (
-	"github.com/tendermint/tendermint/lite/types"
-)
+import "github.com/tendermint/tendermint/types"
 
-// Provider provides information for the lite client to sync.
+// Provider provides information for the lite client to sync (verification
+// happens in the client).
 type Provider interface {
+
 	// ChainID returns the blockchain ID.
 	ChainID() string
 
-	// LatestFullCommit returns the latest FullCommit.
+	// SignedHeader returns the SignedHeader that corresponds to the given
+	// height.
 	//
-	// If the provider fails to fetch the FullCommit due to the IO or other
+	// 0 - the latest.
+	// height must be >= 0.
+	//
+	// If the provider fails to fetch the SignedHeader due to the IO or other
 	// issues, an error will be returned.
-	LatestFullCommit() (types.FullCommit, error)
+	// If there's no SignedHeader for the given height, ErrSignedHeaderNotFound
+	// will be returned.
+	SignedHeader(height int64) (*types.SignedHeader, error)
 
-	// GetFullCommit returns the FullCommit that corresponds to the given height.
+	// ValidatorSet returns the ValidatorSet that corresponds to height.
 	//
-	// If the provider fails to fetch the FullCommit due to the IO or other
+	// 0 - the latest.
+	// height must be >= 0.
+	//
+	// If the provider fails to fetch the ValidatorSet due to the IO or other
 	// issues, an error will be returned.
-	// If there's no FullCommit for the given height, ErrCommitNotFound will be
-	// returned.
-	GetFullCommit(height int64) (types.FullCommit, error)
+	// If there's no ValidatorSet for the given height, ErrValidatorSetNotFound
+	// will be returned.
+	ValidatorSet(height int64) (*types.ValidatorSet, error)
 }
 
-// PersistentProvider is a provider that can also persist new information.
+// PersistentProvider is a provider that can also persist new information
+// (verification happens in the client).
 type PersistentProvider interface {
 	Provider
 
-	// SaveFullCommit saves a FullCommit (without verification).
-	SaveFullCommit(fc types.FullCommit) error
+	// SaveSignedHeader saves a SignedHeader.
+	SaveSignedHeader(sh *types.SignedHeader) error
+
+	// SaveValidatorSet saves a ValidatorSet.
+	SaveValidatorSet(valSet *types.ValidatorSet) error
 }
-
-// UpdatingProvider is a provider that can update itself w/ more recent commit
-// data.
-//type UpdatingProvider interface {
-//	Provider
-
-//	// Update internal information by fetching information somehow.
-//	// UpdateToHeight will block until the request is complete, or returns an
-//	// error if the request cannot complete. Generally, one must call
-//	// UpdateToHeight(h) before GetFullCommit(h) or LatestFullCommit() will
-//	// return this height.
-//	//
-//	// NOTE: behavior with concurrent requests is undefined. To make concurrent
-//	// calls safe, look at ConcurrentProvider.
-//	UpdateToHeight(height int64) error
-//}

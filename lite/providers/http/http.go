@@ -87,7 +87,7 @@ func (p *HTTP) getValidatorSet(chainID string, height int64) (valset *ctypes.Val
 	res, err := p.client.Validators(&height)
 	if err != nil {
 		// TODO pass through other types of errors.
-		return nil, lerr.ErrUnknownValidators(height)
+		return nil, lerr.ErrValidatorSetNotFound(height)
 	}
 
 	return types.NewValidatorSet(res.Validators), nil

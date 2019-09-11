@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -13,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/lite"
 	lclient "github.com/tendermint/tendermint/lite/client"
 	lerr "github.com/tendermint/tendermint/lite/errors"
+	"github.com/tendermint/tendermint/lite/providers/db"
 	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
@@ -20,10 +20,9 @@ import (
 const (
 	loggerPath = "lite"
 	memDBFile  = "trusted.mem"
+	cacheSize  = 100
 	lvlDBFile  = "trusted.lvl"
 	dbName     = "trust-base"
-
-	sizeOfPendingMap = 1024
 )
 
 // TrustOptions are the trust parameters needed for when a new light client
@@ -54,59 +53,116 @@ type TrustOptions struct {
 	Callback func(height int64, hash []byte) error
 }
 
-// HeightAndHashPresent returns true if TrustHeight and TrustHash are present.
-func (opts TrustOptions) HeightAndHashPresent() bool {
+// Option1 returns true if TrustHeight and TrustHash are present.
+func (opts TrustOptions) Option1() bool {
 	return opts.TrustHeight > 0 && len(opts.TrustHash) > 0
 }
 
-// Provider implements a persistent caching Provider that auto-validates. It
-// uses a "source" Provider to obtain the needed FullCommits to securely sync
-// with validator set changes. It stores properly validated data on the
-// "trusted" local system using a "trusted" Provider.
-//
-// NOTE:
-//	- This Provider can only work with one chainID, provided upon
-// instantiation;
-//  - For concurrent usage, use ConcurrentProvider.
-type Provider struct {
-	chainID     string
-	trustPeriod time.Duration // see TrustOptions above
-	now         nowFn
-	height      int64
-	logger      log.Logger
+type mode int
 
-	// Already validated, stored locally
-	trusted lite.PersistentProvider
+const (
+	sequential mode = iota
+	bisecting
+)
 
-	// New info, like a node rpc, or other import method.
-	source lite.Provider
-
-	// pending map to synchronize concurrent verification requests
-	mtx                  sync.Mutex
-	pendingVerifications map[int64]chan struct{}
+// SequentialVerification option can be used to instruct Verifier to
+// sequentially check the headers. Note this is much slower than
+// BisectingVerification, albeit more secure.
+func SequentialVerification() Option {
+	return func(v *Verifier) {
+		v.mode = sequential
+	}
 }
 
-var _ lite.UpdatingProvider = (*Provider)(nil)
+// BisectingVerification option can be used to instruct Verifier to check the
+// headers using bisection algorithm described in XXX.
+//
+// trustLevel - maximum change between two not consequitive headers in terms of
+// validators & their respective voting power, required to trust a new header
+// (default: 1/3).
+func BisectingVerification(trustLevel float) Option {
+	if trustLevel > 1 || trustLevel < 1/3 {
+		panic(fmt.Sprintf("trustLevel must be within [1/3, 1], given %v", trustLevel))
+	}
+	return func(v *Verifier) {
+		v.mode = bisecting
+		v.trustLevel = trustLevel
+	}
+}
 
-type nowFn func() time.Time
+// DefaultBisectingVerification is BisectingVerification option with
+// trustLevel=1/3.
+var DefaultBisectingVerification = func() Option {
+	return BisectingVerification(1 / 3)
+}
 
-func NewProvider(chainID, dataDir string, options *Option) *Provider {
-	vp := Provider{
-		chainID:              chainID,
-		pendingVerifications: make(map[int64]chan struct{}, sizeOfPendingMap),
+// Trusted option can be used to change default trusted provider. See
+// NewVerifier func.
+func Trusted(trusted Provider) Option {
+	return func(v *Verifier) {
+		v.mode = bisecting
+	}
+}
+
+// AlternativeSources option can be used to supply alternative sources, which
+// will be used for cross-checking the primary source of new headers.
+func AlternativeSources(sources []Provider) Option {
+	return func(v *Verifier) {
+		v.alternativeSources = sources
+	}
+}
+
+// Verifier is the core of the light client performing validation of the
+// headers it obtains from the source provider. It stores properly validated
+// data on the "trusted" local system using a "trusted" Provider.
+//
+// It periodically cross-validates the source provider by checking alternative
+// sources (optional).
+type Verifier struct {
+	chainID            string
+	trustOptions       TrustOptions
+	mode               mode
+	trustLevel         float
+	lastVerifiedHeight int64
+
+	// Source of new headers.
+	source Provider
+
+	// Alternative sources for checking the primary for misbehavior by comparing
+	// data.
+	alternativeSources []Provider
+
+	// Where trusted headers are stored.
+	trusted PersistentProvider
+
+	logger log.Logger
+}
+
+// NewVerifier returns a new Verifier.
+//
+// If no trusted provider is configured using Trusted option, MultiProvider
+// will be used (in-memory cache with capacity=100 in front of goleveldb
+// database).
+func NewVerifier(chainID string, trustOptions TrustOptions, source Provider,
+	options *Option) *Verifier {
+
+	v := Verifier{
+		chainID:      chainID,
+		trustOptions: trustOptions,
+		source:       source,
 	}
 
 	for _, o := range options {
 		o(vp)
 	}
 
-	if vp.source == nil {
-		vp.source = lclient.NewHTTPProvider(chainID, remote)
+	// Better to execute after to avoid unnecessary initialization.
+	if v.trusted == nil {
+		v.trusted = NewMultiProvider(
+			db.New(memDBFile, dbm.NewMemDB()).SetLimit(cacheSize),
+			db.New(lvlDBFile, dbm.NewDB(dbName, dbm.GoLevelDBBackend, rootDir)),
+		)
 	}
-	trusted := lite.NewMultiProvider(
-		lite.NewDBProvider(memDBFile, dbm.NewMemDB()).SetLimit(cacheSize),
-		lite.NewDBProvider(lvlDBFile, dbm.NewDB(dbName, dbm.GoLevelDBBackend, rootDir)),
-	)
 }
 
 // NewProvider creates a Provider.
@@ -142,7 +198,7 @@ func NewProvider(chainID, rootDir string, client lclient.SignStatusClient,
 	// NOTE: There is a duplication of fetching this latest commit (since
 	// UpdateToHeight() will fetch it again, and latestCommit isn't used), but
 	// it's only once upon initialization so it's not a big deal.
-	if options.HeightAndHashPresent() {
+	if options.Option1() {
 		// Fetch latest commit (nil means latest height).
 		latestCommit, err := client.Commit(nil)
 		if err != nil {
@@ -204,7 +260,7 @@ func getTrustedCommit(logger log.Logger, client lclient.SignStatusClient, option
 	}
 
 	// If the user has set a root of trust, confirm it then update to newest.
-	if options.HeightAndHashPresent() {
+	if options.Option1() {
 		trustCommit, err := client.Commit(&options.TrustHeight)
 		if err != nil {
 			return types.SignedHeader{}, err
@@ -322,7 +378,7 @@ func (vp *Provider) fillValsetAndSaveFC(signedHeader types.SignedHeader,
 		for {
 			// fetch block at signedHeader.Height+1
 			nextValset, err = vp.source.ValidatorSet(vp.chainID, signedHeader.Height+1)
-			if lerr.IsErrUnknownValidators(err) {
+			if lerr.IsErrValidatorSetNotFound(err) {
 				// try again until we get it.
 				vp.logger.Debug("fetching valset for height %d...\n", signedHeader.Height+1)
 				continue

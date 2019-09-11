@@ -162,7 +162,7 @@ func (dbp *DB) GetFullCommit(height int64) (FullCommit, error) {
 func (dbp *DB) getValidatorSet(chainID string, height int64) (valset *types.ValidatorSet, err error) {
 	vsBz := dbp.db.Get(validatorSetKey(chainID, height))
 	if vsBz == nil {
-		err = lerr.ErrUnknownValidators(chainID, height)
+		err = lerr.ErrValidatorSetNotFound(chainID, height)
 		return
 	}
 	err = dbp.cdc.UnmarshalBinaryLengthPrefixed(vsBz, &valset)

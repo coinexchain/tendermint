@@ -6,9 +6,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-type errCommitNotFound struct{}
+type errSignedHeaderNotFound struct{}
 
-func (e errCommitNotFound) Error() string {
+func (e errSignedHeaderNotFound) Error() string {
 	return "Commit not found by provider"
 }
 
@@ -22,11 +22,11 @@ func (e errUnexpectedValidators) Error() string {
 		e.got, e.want)
 }
 
-type errUnknownValidators struct {
+type errValidatorSetNotFound struct {
 	height int64
 }
 
-func (e errUnknownValidators) Error() string {
+func (e errValidatorSetNotFound) Error() string {
 	return fmt.Sprintf("Validators are unknown or missing for height %d",
 		e.height)
 }
@@ -43,13 +43,14 @@ func (e errCommitExpired) Error() string {
 	return "commit is too old to be trusted"
 }
 
-// ErrCommitNotFound indicates that a the requested commit was not found.
-func ErrCommitNotFound() error {
-	return errors.Wrap(errCommitNotFound{}, "")
+// ErrSignedHeaderNotFound indicates that a the requested SignedHeader was not
+// found.
+func ErrSignedHeaderNotFound() error {
+	return errors.Wrap(errSignedHeaderNotFound{}, "")
 }
 
-func IsErrCommitNotFound(err error) bool {
-	_, ok := errors.Cause(err).(errCommitNotFound)
+func IsErrSignedHeaderNotFound(err error) bool {
+	_, ok := errors.Cause(err).(errSignedHeaderNotFound)
 	return ok
 }
 
@@ -66,13 +67,13 @@ func IsErrUnexpectedValidators(err error) bool {
 	return ok
 }
 
-// ErrUnknownValidators indicates that some validator set was missing or unknown.
-func ErrUnknownValidators(height int64) error {
-	return errors.Wrap(errUnknownValidators{height}, "")
+// ErrValidatorSetNotFound indicates that some validator set was missing or unknown.
+func ErrValidatorSetNotFound(height int64) error {
+	return errors.Wrap(errValidatorSetNotFound{height}, "")
 }
 
-func IsErrUnknownValidators(err error) bool {
-	_, ok := errors.Cause(err).(errUnknownValidators)
+func IsErrValidatorSetNotFound(err error) bool {
+	_, ok := errors.Cause(err).(errValidatorSetNotFound)
 	return ok
 }
 
