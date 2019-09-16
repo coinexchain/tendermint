@@ -116,6 +116,7 @@ func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) e
 // It takes a blockID to avoid recomputing the parts hash.
 func (blockExec *BlockExecutor) ApplyBlock(state State, blockID types.BlockID, block *types.Block) (State, error) {
 
+    blockExec.logger.Info("ApplyBlock-Begin", "height", block.Height)
 	if err := blockExec.ValidateBlock(state, block); err != nil {
 		return state, ErrInvalidBlock(err)
 	}
@@ -131,8 +132,9 @@ func (blockExec *BlockExecutor) ApplyBlock(state State, blockID types.BlockID, b
 	fail.Fail() // XXX
 
 	// Save the results before we commit.
+    blockExec.logger.Info("Save Response Begin", "height", block.Height)
 	saveABCIResponses(blockExec.db, block.Height, abciResponses)
-
+    blockExec.logger.Info("Save Response End", "height", block.Height)
 	fail.Fail() // XXX
 
 	// validate the validator updates and convert to tendermint types
@@ -175,7 +177,7 @@ func (blockExec *BlockExecutor) ApplyBlock(state State, blockID types.BlockID, b
 	// Events are fired after everything else.
 	// NOTE: if we crash between Commit and Save, events wont be fired during replay
 	fireEvents(blockExec.logger, blockExec.eventBus, block, abciResponses, validatorUpdates)
-
+    blockExec.logger.Info("ApplyBlock-End", "height", block.Height)
 	return state, nil
 }
 
@@ -244,6 +246,7 @@ func execBlockOnProxyApp(
 ) (*ABCIResponses, error) {
 	var validTxs, invalidTxs = 0, 0
 
+    logger.Info("Executed Block-Begin", "height", block.Height)
 	txIndex := 0
 	abciResponses := NewABCIResponses(block)
 
@@ -297,7 +300,7 @@ func execBlockOnProxyApp(
 		return nil, err
 	}
 
-	logger.Info("Executed block", "height", block.Height, "validTxs", validTxs, "invalidTxs", invalidTxs)
+	logger.Info("Executed Block-End", "height", block.Height, "validTxs", validTxs, "invalidTxs", invalidTxs)
 
 	return abciResponses, nil
 }
