@@ -447,7 +447,7 @@ func (cs *ConsensusState) updateHeight(height int64) {
 }
 
 func (cs *ConsensusState) updateRoundStep(round int, step cstypes.RoundStepType) {
-    fmt.Printf("%s; round : %d, step : %s", time.Now().Format(time.RFC3339Nano), round, step.String())
+    fmt.Printf("%s; round : %d, step : %s\n", time.Now().Format(time.RFC3339Nano), round, step.String())
 	cs.Round = round
 	cs.Step = step
 }
