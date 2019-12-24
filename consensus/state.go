@@ -133,6 +133,9 @@ type ConsensusState struct {
 
 	// for reporting metrics
 	metrics *Metrics
+
+	// timestamp of last block, to tune block interval
+	lastBlockTime time.Time
 }
 
 // StateOption sets an optional parameter on the ConsensusState.
@@ -163,6 +166,7 @@ func NewConsensusState(
 		evpool:           evpool,
 		evsw:             tmevents.NewEventSwitch(),
 		metrics:          NopMetrics(),
+		lastBlockTime:    time.Unix(0,0),
 	}
 	// set function defaults (may be overwritten before calling Start)
 	cs.decideProposal = cs.defaultDecideProposal
@@ -1341,6 +1345,17 @@ func (cs *ConsensusState) finalizeCommit(height int64) {
 
 	// Create a copy of the state for staging and an event cache for txs.
 	stateCopy := cs.state.Copy()
+
+	// Adjust TimeoutCommit
+	if cs.lastBlockTime.Unix() != 0 {
+		diff := block.Header.Time.Sub(cs.lastBlockTime)
+		if diff.Nanoseconds() < cs.config.TargetBlockInterval.Nanoseconds() {
+			cs.config.IncrTimeoutCommit()
+		} else if diff.Nanoseconds() > cs.config.TargetBlockInterval.Nanoseconds() {
+			cs.config.DecrTimeoutCommit()
+		}
+	}
+	cs.lastBlockTime = block.Header.Time
 
 	// Execute and commit the block, update and save the state, and update the mempool.
 	// NOTE The block.AppHash wont reflect these txs until the next block.
