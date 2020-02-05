@@ -137,6 +137,14 @@ func NewPartSetFromHeader(header PartSetHeader) *PartSet {
 	}
 }
 
+func (ps *PartSet) TotalBytes() int {
+	total := 0
+	for _, part := range ps.parts {
+		total += len(part.Bytes)
+	}
+	return total
+}
+
 func (ps *PartSet) Header() PartSetHeader {
 	if ps == nil {
 		return PartSetHeader{}
