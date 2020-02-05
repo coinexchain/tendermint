@@ -735,6 +735,8 @@ type ConsensusConfig struct {
 	WalPath string `mapstructure:"wal_file"`
 	walFile string // overrides WalPath if set
 
+	TargetBlockInterval   time.Duration `mapstructure:"target_block_interval"`
+
 	TimeoutPropose        time.Duration `mapstructure:"timeout_propose"`
 	TimeoutProposeDelta   time.Duration `mapstructure:"timeout_propose_delta"`
 	TimeoutPrevote        time.Duration `mapstructure:"timeout_prevote"`
@@ -742,6 +744,9 @@ type ConsensusConfig struct {
 	TimeoutPrecommit      time.Duration `mapstructure:"timeout_precommit"`
 	TimeoutPrecommitDelta time.Duration `mapstructure:"timeout_precommit_delta"`
 	TimeoutCommit         time.Duration `mapstructure:"timeout_commit"`
+	TimeoutCommitUpper    time.Duration `mapstructure:"timeout_commit_upper"`
+	TimeoutCommitLower    time.Duration `mapstructure:"timeout_commit_lower"`
+	TimeoutCommitDelta    time.Duration `mapstructure:"timeout_commit_delta"`
 
 	// Make progress as soon as we have all the precommits (as if TimeoutCommit = 0)
 	SkipTimeoutCommit bool `mapstructure:"skip_timeout_commit"`
@@ -766,6 +771,9 @@ func DefaultConsensusConfig() *ConsensusConfig {
 		TimeoutPrecommit:            1000 * time.Millisecond,
 		TimeoutPrecommitDelta:       500 * time.Millisecond,
 		TimeoutCommit:               1000 * time.Millisecond,
+		TimeoutCommitUpper:          1500 * time.Millisecond,
+		TimeoutCommitLower:           500 * time.Millisecond,
+		TimeoutCommitDelta:           100 * time.Millisecond,
 		SkipTimeoutCommit:           false,
 		CreateEmptyBlocks:           true,
 		CreateEmptyBlocksInterval:   0 * time.Second,
@@ -822,6 +830,24 @@ func (cfg *ConsensusConfig) Commit(t time.Time) time.Time {
 	return t.Add(cfg.TimeoutCommit)
 }
 
+func (cfg *ConsensusConfig) IncrTimeoutCommit() {
+	cfg.TimeoutCommit = time.Duration(
+		cfg.TimeoutCommit.Nanoseconds()+cfg.TimeoutCommitDelta.Nanoseconds(),
+	) * time.Nanosecond
+	if cfg.TimeoutCommit.Nanoseconds() > cfg.TimeoutCommitUpper.Nanoseconds() {
+		cfg.TimeoutCommit = cfg.TimeoutCommitUpper
+	}
+}
+
+func (cfg *ConsensusConfig) DecrTimeoutCommit() {
+	cfg.TimeoutCommit = time.Duration(
+		cfg.TimeoutCommit.Nanoseconds()-cfg.TimeoutCommitDelta.Nanoseconds(),
+	) * time.Nanosecond
+	if cfg.TimeoutCommit.Nanoseconds() < cfg.TimeoutCommitLower.Nanoseconds() {
+		cfg.TimeoutCommit = cfg.TimeoutCommitLower
+	}
+}
+
 // WalFile returns the full path to the write-ahead log file
 func (cfg *ConsensusConfig) WalFile() string {
 	if cfg.walFile != "" {
@@ -838,6 +864,9 @@ func (cfg *ConsensusConfig) SetWalFile(walFile string) {
 // ValidateBasic performs basic validation (checking param bounds, etc.) and
 // returns an error if any check fails.
 func (cfg *ConsensusConfig) ValidateBasic() error {
+	if cfg.TargetBlockInterval < 0 {
+		return errors.New("target_block_interval can't be negative")
+	}
 	if cfg.TimeoutPropose < 0 {
 		return errors.New("timeout_propose can't be negative")
 	}
@@ -858,6 +887,15 @@ func (cfg *ConsensusConfig) ValidateBasic() error {
 	}
 	if cfg.TimeoutCommit < 0 {
 		return errors.New("timeout_commit can't be negative")
+	}
+	if cfg.TimeoutCommitDelta < 0 {
+		return errors.New("timeout_commit_delta can't be negative")
+	}
+	if cfg.TimeoutCommitUpper < 0 {
+		return errors.New("timeout_commit_upper can't be negative")
+	}
+	if cfg.TimeoutCommitLower < 0 {
+		return errors.New("timeout_commit_lower can't be negative")
 	}
 	if cfg.CreateEmptyBlocksInterval < 0 {
 		return errors.New("create_empty_blocks_interval can't be negative")
