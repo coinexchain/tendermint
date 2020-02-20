@@ -88,7 +88,7 @@ func validateBlock(evidencePool EvidencePool, stateDB dbm.DB, state State, block
 	}
 
 	// Validate block LastCommit.
-	if block.Height == 1 {
+	if block.Height == int64(GenesisBlockHeight)+1 {
 		if len(block.LastCommit.Precommits) != 0 {
 			return errors.New("Block at height 1 can't have LastCommit precommits")
 		}
@@ -119,7 +119,7 @@ func validateBlock(evidencePool EvidencePool, stateDB dbm.DB, state State, block
 				block.Time,
 			)
 		}
-	} else if block.Height == 1 {
+	} else if block.Height == int64(GenesisBlockHeight)+1 {
 		genesisTime := state.LastBlockTime
 		if !block.Time.Equal(genesisTime) {
 			return fmt.Errorf("Block time %v is not equal to genesis time %v",

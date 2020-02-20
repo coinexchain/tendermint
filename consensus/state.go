@@ -875,7 +875,7 @@ func (cs *ConsensusState) enterNewRound(height int64, round int) {
 // needProofBlock returns true on the first height (so the genesis app hash is signed right away)
 // and where the last block (height-1) caused the app hash to change
 func (cs *ConsensusState) needProofBlock(height int64) bool {
-	if height == 1 {
+	if height == int64(sm.GenesisBlockHeight)+1 {
 		return true
 	}
 
@@ -1014,7 +1014,7 @@ func (cs *ConsensusState) isProposalComplete() bool {
 func (cs *ConsensusState) createProposalBlock() (block *types.Block, blockParts *types.PartSet) {
 	var commit *types.Commit
 	switch {
-	case cs.Height == 1:
+	case cs.Height == int64(sm.GenesisBlockHeight)+1:
 		// We're creating a proposal for the first block.
 		// The commit is empty, but not nil.
 		commit = types.NewCommit(types.BlockID{}, nil)
