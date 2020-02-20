@@ -313,7 +313,7 @@ func getBeginBlockValidatorInfo(block *types.Block, stateDB dbm.DB) (abci.LastCo
 	byzVals := make([]abci.Evidence, len(block.Evidence.Evidence))
 	var lastValSet *types.ValidatorSet
 	var err error
-	if block.Height > 1 {
+	if block.Height > GenesisBlockHeight+1 {
 		lastValSet, err = LoadValidators(stateDB, block.Height-1)
 		if err != nil {
 			panic(err) // shouldn't happen
