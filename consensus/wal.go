@@ -3,7 +3,6 @@ package consensus
 import (
 	"encoding/binary"
 	"fmt"
-	sm "github.com/tendermint/tendermint/state"
 	"hash/crc32"
 	"io"
 	"path/filepath"

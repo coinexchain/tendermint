@@ -86,7 +86,7 @@ func (b *Block) ValidateBasic() error {
 	}
 
 	// Validate the last commit and its hash.
-	if b.Header.Height > GenesisBlockHeight {
+	if b.Header.Height > GenesisBlockHeight+1 {
 
 		if b.LastCommit == nil {
 			return errors.New("nil LastCommit")

@@ -1513,7 +1513,7 @@ func (cs *ConsensusState) recordMetrics(height int64, block *types.Block) {
 	}
 	cs.metrics.ByzantineValidatorsPower.Set(float64(byzantineValidatorsPower))
 
-	if height > sm.GenesisBlockHeight+1 {
+	if height > types.GenesisBlockHeight+1 {
 		lastBlockMeta := cs.blockStore.LoadBlockMeta(height - 1)
 		cs.metrics.BlockIntervalSeconds.Set(
 			block.Time.Sub(lastBlockMeta.Header.Time).Seconds(),
