@@ -488,7 +488,7 @@ func (cs *ConsensusState) sendInternalMessage(mi msgInfo) {
 // Reconstruct LastCommit from SeenCommit, which we saved along with the block,
 // (which happens even before saving the state)
 func (cs *ConsensusState) reconstructLastCommit(state sm.State) {
-	if state.LastBlockHeight == sm.GenesisBlockHeight {
+	if state.LastBlockHeight == types.GenesisBlockHeight {
 		return
 	}
 	seenCommit := cs.blockStore.LoadSeenCommit(state.LastBlockHeight)
@@ -502,7 +502,7 @@ func (cs *ConsensusState) reconstructLastCommit(state sm.State) {
 // Updates ConsensusState and increments height to match that of state.
 // The round becomes 0 and cs.Step becomes cstypes.RoundStepNewHeight.
 func (cs *ConsensusState) updateToState(state sm.State) {
-	if cs.CommitRound > -1 && sm.GenesisBlockHeight < cs.Height && cs.Height != state.LastBlockHeight {
+	if cs.CommitRound > -1 && types.GenesisBlockHeight < cs.Height && cs.Height != state.LastBlockHeight {
 		panic(fmt.Sprintf("updateToState() expected state height of %v but found %v",
 			cs.Height, state.LastBlockHeight))
 	}
@@ -875,7 +875,7 @@ func (cs *ConsensusState) enterNewRound(height int64, round int) {
 // needProofBlock returns true on the first height (so the genesis app hash is signed right away)
 // and where the last block (height-1) caused the app hash to change
 func (cs *ConsensusState) needProofBlock(height int64) bool {
-	if height == sm.GenesisBlockHeight+1 {
+	if height == types.GenesisBlockHeight+1 {
 		return true
 	}
 
@@ -1014,7 +1014,7 @@ func (cs *ConsensusState) isProposalComplete() bool {
 func (cs *ConsensusState) createProposalBlock() (block *types.Block, blockParts *types.PartSet) {
 	var commit *types.Commit
 	switch {
-	case cs.Height == sm.GenesisBlockHeight+1:
+	case cs.Height == types.GenesisBlockHeight+1:
 		// We're creating a proposal for the first block.
 		// The commit is empty, but not nil.
 		commit = types.NewCommit(types.BlockID{}, nil)

@@ -15,7 +15,6 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/types"
-	sm "github.com/tendermint/tendermint/state"
 	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
@@ -128,7 +127,7 @@ func (wal *baseWAL) OnStart() error {
 	if err != nil {
 		return err
 	} else if size == 0 {
-		wal.WriteSync(EndHeightMessage{sm.GenesisBlockHeight})
+		wal.WriteSync(EndHeightMessage{types.GenesisBlockHeight})
 	}
 	err = wal.group.Start()
 	if err != nil {
@@ -247,7 +246,7 @@ func (wal *baseWAL) SearchForEndHeight(
 			msg, err = dec.Decode()
 			if err == io.EOF {
 				// OPTIMISATION: no need to look for height in older files if we've seen h < height
-				if lastHeightFound > sm.GenesisBlockHeight && lastHeightFound < height {
+				if lastHeightFound > types.GenesisBlockHeight && lastHeightFound < height {
 					gr.Close()
 					return nil, false, nil
 				}

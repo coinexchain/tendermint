@@ -11,8 +11,6 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
-var GenesisBlockHeight int64 = types.GenesisBlockHeight
-
 // database keys
 var (
 	stateKey = []byte("stateKey")
@@ -145,7 +143,7 @@ func (state State) MakeBlock(
 
 	// Set time.
 	var timestamp time.Time
-	if height == GenesisBlockHeight+1 {
+	if height == types.GenesisBlockHeight+1 {
 		timestamp = state.LastBlockTime // genesis time
 	} else {
 		timestamp = MedianTime(commit, state.LastValidators)
@@ -235,17 +233,17 @@ func MakeGenesisState(genDoc *types.GenesisDoc) (State, error) {
 		Version: initStateVersion,
 		ChainID: genDoc.ChainID,
 
-		LastBlockHeight: GenesisBlockHeight,
+		LastBlockHeight: types.GenesisBlockHeight,
 		LastBlockID:     types.BlockID{},
 		LastBlockTime:   genDoc.GenesisTime,
 
 		NextValidators:              nextValidatorSet,
 		Validators:                  validatorSet,
 		LastValidators:              types.NewValidatorSet(nil),
-		LastHeightValidatorsChanged: GenesisBlockHeight+1,
+		LastHeightValidatorsChanged: types.GenesisBlockHeight+1,
 
 		ConsensusParams:                  *genDoc.ConsensusParams,
-		LastHeightConsensusParamsChanged: GenesisBlockHeight+1,
+		LastHeightConsensusParamsChanged: types.GenesisBlockHeight+1,
 
 		AppHash: genDoc.AppHash,
 	}, nil

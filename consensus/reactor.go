@@ -494,7 +494,7 @@ OUTER_LOOP:
 		}
 
 		// If the peer is on a previous height, help catch up.
-		if (sm.GenesisBlockHeight < prs.Height) && (prs.Height < rs.Height) {
+		if (types.GenesisBlockHeight < prs.Height) && (prs.Height < rs.Height) {
 			heightLogger := logger.With("height", prs.Height)
 
 			// if we never received the commit message from the peer, the block parts wont be initialized
@@ -638,7 +638,7 @@ OUTER_LOOP:
 
 		// Special catchup logic.
 		// If peer is lagging by height 1, send LastCommit.
-		if prs.Height != sm.GenesisBlockHeight && rs.Height == prs.Height+1 {
+		if prs.Height != types.GenesisBlockHeight && rs.Height == prs.Height+1 {
 			if ps.PickSendVote(rs.LastCommit) {
 				logger.Debug("Picked rs.LastCommit to send", "height", prs.Height)
 				continue OUTER_LOOP
@@ -647,7 +647,7 @@ OUTER_LOOP:
 
 		// Catchup logic
 		// If peer is lagging by more than 1, send Commit.
-		if prs.Height != sm.GenesisBlockHeight && rs.Height >= prs.Height+2 {
+		if prs.Height != types.GenesisBlockHeight && rs.Height >= prs.Height+2 {
 			// Load the block commit for prs.Height,
 			// which contains precommit signatures for prs.Height.
 			commit := conR.conS.blockStore.LoadBlockCommit(prs.Height)
@@ -801,7 +801,7 @@ OUTER_LOOP:
 		// Maybe send Height/CatchupCommitRound/CatchupCommit.
 		{
 			prs := ps.GetRoundState()
-			if prs.CatchupCommitRound != -1 && sm.GenesisBlockHeight < prs.Height && prs.Height <= conR.conS.blockStore.Height() {
+			if prs.CatchupCommitRound != -1 && types.GenesisBlockHeight < prs.Height && prs.Height <= conR.conS.blockStore.Height() {
 				commit := conR.conS.LoadCommit(prs.Height)
 				peer.TrySend(StateChannel, cdc.MustMarshalBinaryBare(&VoteSetMaj23Message{
 					Height:  prs.Height,
@@ -1433,8 +1433,8 @@ func (m *NewRoundStepMessage) ValidateBasic() error {
 
 	// NOTE: SecondsSinceStartTime may be negative
 
-	if (m.Height == sm.GenesisBlockHeight+1 && m.LastCommitRound != -1) ||
-		(m.Height > sm.GenesisBlockHeight+1 && m.LastCommitRound < -1) { // TODO: #2737 LastCommitRound should always be >= 0 for heights > 1
+	if (m.Height == types.GenesisBlockHeight+1 && m.LastCommitRound != -1) ||
+		(m.Height > types.GenesisBlockHeight+1 && m.LastCommitRound < -1) { // TODO: #2737 LastCommitRound should always be >= 0 for heights > 1
 		return errors.New("Invalid LastCommitRound (for 1st block: -1, for others: >= 0)")
 	}
 	return nil

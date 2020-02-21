@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	sm "github.com/tendermint/tendermint/state"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -238,7 +237,7 @@ func LoadBlockStoreStateJSON(db dbm.DB) BlockStoreStateJSON {
 	bytes := db.Get(blockStoreKey)
 	if len(bytes) == 0 {
 		return BlockStoreStateJSON{
-			Height: sm.GenesisBlockHeight,
+			Height: types.GenesisBlockHeight,
 		}
 	}
 	bsj := BlockStoreStateJSON{}
