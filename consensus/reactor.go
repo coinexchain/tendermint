@@ -494,7 +494,7 @@ OUTER_LOOP:
 		}
 
 		// If the peer is on a previous height, help catch up.
-		if (0 < prs.Height) && (prs.Height < rs.Height) {
+		if (sm.GenesisBlockHeight < prs.Height) && (prs.Height < rs.Height) {
 			heightLogger := logger.With("height", prs.Height)
 
 			// if we never received the commit message from the peer, the block parts wont be initialized
@@ -647,7 +647,7 @@ OUTER_LOOP:
 
 		// Catchup logic
 		// If peer is lagging by more than 1, send Commit.
-		if prs.Height != 0 && rs.Height >= prs.Height+2 {
+		if prs.Height != sm.GenesisBlockHeight && rs.Height >= prs.Height+2 {
 			// Load the block commit for prs.Height,
 			// which contains precommit signatures for prs.Height.
 			commit := conR.conS.blockStore.LoadBlockCommit(prs.Height)

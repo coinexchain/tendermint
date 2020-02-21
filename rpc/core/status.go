@@ -28,7 +28,7 @@ func Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
 		latestAppHash       cmn.HexBytes
 		latestBlockTimeNano int64
 	)
-	if latestHeight != 0 {
+	if latestHeight != sm.GenesisBlockHeight {
 		latestBlockMeta = blockStore.LoadBlockMeta(latestHeight)
 		latestBlockHash = latestBlockMeta.BlockID.Hash
 		latestAppHash = latestBlockMeta.Header.AppHash

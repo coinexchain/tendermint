@@ -17,6 +17,7 @@ import (
 	"github.com/tendermint/tendermint/libs/pubsub/query"
 	"github.com/tendermint/tendermint/state/txindex"
 	"github.com/tendermint/tendermint/types"
+	sm "github.com/tendermint/tendermint/state"
 )
 
 const (
@@ -553,7 +554,7 @@ func keyForHeight(result *types.TxResult) []byte {
 }
 
 func startKeyForCondition(c query.Condition, height int64) []byte {
-	if height > 0 {
+	if height > sm.GenesisBlockHeight {
 		return startKey(c.Tag, c.Operand, height)
 	}
 	return startKey(c.Tag, c.Operand)
