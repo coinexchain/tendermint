@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
-var GenesisBlockHeight int64 = 10
+var GenesisBlockHeight int64 = types.GenesisBlockHeight
 
 // database keys
 var (

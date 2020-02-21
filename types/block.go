@@ -16,6 +16,8 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
+var GenesisBlockHeight = int64(10)
+
 const (
 	// MaxHeaderBytes is a maximum header size (including amino overhead).
 	MaxHeaderBytes int64 = 653
@@ -84,7 +86,7 @@ func (b *Block) ValidateBasic() error {
 	}
 
 	// Validate the last commit and its hash.
-	if b.Header.Height > sm.GenesisBlockHeight {
+	if b.Header.Height > GenesisBlockHeight {
 		if b.LastCommit == nil {
 			return errors.New("nil LastCommit")
 		}
