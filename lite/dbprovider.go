@@ -11,6 +11,7 @@ import (
 	lerr "github.com/tendermint/tendermint/lite/errors"
 	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	sm "github.com/tendermint/tendermint/state"
 )
 
 var _ PersistentProvider = (*DBProvider)(nil)
@@ -101,8 +102,8 @@ func (dbp *DBProvider) LatestFullCommit(chainID string, minHeight, maxHeight int
 	dbp.logger.Info("DBProvider.LatestFullCommit()...",
 		"chainID", chainID, "minHeight", minHeight, "maxHeight", maxHeight)
 
-	if minHeight <= 0 {
-		minHeight = 1
+	if minHeight <= sm.GenesisBlockHeight {
+		minHeight = sm.GenesisBlockHeight+1
 	}
 	if maxHeight == 0 {
 		maxHeight = 1<<63 - 1

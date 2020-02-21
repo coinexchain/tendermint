@@ -13,6 +13,7 @@ import (
 	lerr "github.com/tendermint/tendermint/lite/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	sm "github.com/tendermint/tendermint/state"
 	"github.com/tendermint/tendermint/types"
 )
 
@@ -102,8 +103,8 @@ func (p *provider) getValidatorSet(chainID string, height int64) (valset *types.
 		err = fmt.Errorf("expected chainID %s, got %s", p.chainID, chainID)
 		return
 	}
-	if height < 1 {
-		err = fmt.Errorf("expected height >= 1, got height %v", height)
+	if height < sm.GenesisBlockHeight+1 {
+		err = fmt.Errorf("expected height >= %d, got height %v", sm.GenesisBlockHeight+1, height)
 		return
 	}
 	res, err := p.client.Validators(&height)
