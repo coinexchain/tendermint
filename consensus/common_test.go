@@ -74,6 +74,7 @@ func NewValidatorStub(privValidator types.PrivValidator, valIndex int) *validato
 	return &validatorStub{
 		Index:         valIndex,
 		PrivValidator: privValidator,
+		Height:        types.GenesisBlockHeight,
 	}
 }
 

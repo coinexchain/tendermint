@@ -48,7 +48,7 @@ func (p *Proposal) ValidateBasic() error {
 	if p.Type != ProposalType {
 		return errors.New("Invalid Type")
 	}
-	if p.Height < 0 {
+	if p.Height < GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if p.Round < 0 {

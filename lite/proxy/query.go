@@ -23,7 +23,7 @@ func GetWithProof(prt *merkle.ProofRuntime, key []byte, reqHeight int64, node rp
 	cert lite.Verifier) (
 	val cmn.HexBytes, height int64, proof *merkle.Proof, err error) {
 
-	if reqHeight < 0 {
+	if reqHeight < types.GenesisBlockHeight {
 		err = cmn.NewError("Height cannot be negative")
 		return
 	}

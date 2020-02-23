@@ -43,7 +43,7 @@ func TestProvider(t *testing.T) {
 	require.Nil(err)
 
 	// let's get the highest block
-	fc, err := p.LatestFullCommit(chainID, 1, 1<<63-1)
+	fc, err := p.LatestFullCommit(chainID, types.GenesisBlockHeight+1, 1<<63-1)
 
 	require.Nil(err, "%+v", err)
 	sh := fc.Height()

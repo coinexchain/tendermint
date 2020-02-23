@@ -126,7 +126,7 @@ func (vote *Vote) ValidateBasic() error {
 	if !IsVoteTypeValid(vote.Type) {
 		return errors.New("Invalid Type")
 	}
-	if vote.Height < 0 {
+	if vote.Height < GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if vote.Round < 0 {

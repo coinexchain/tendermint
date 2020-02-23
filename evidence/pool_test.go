@@ -30,11 +30,11 @@ func initializeValidatorState(valAddr []byte, height int64) dbm.DB {
 		},
 	}
 	state := sm.State{
-		LastBlockHeight:             0,
+		LastBlockHeight:             types.GenesisBlockHeight,
 		LastBlockTime:               tmtime.Now(),
 		Validators:                  valSet,
 		NextValidators:              valSet.CopyIncrementProposerPriority(1),
-		LastHeightValidatorsChanged: 1,
+		LastHeightValidatorsChanged: types.GenesisBlockHeight+1,
 		ConsensusParams: types.ConsensusParams{
 			Evidence: types.EvidenceParams{
 				MaxAge: 1000000,
@@ -43,7 +43,7 @@ func initializeValidatorState(valAddr []byte, height int64) dbm.DB {
 	}
 
 	// save all states up to height
-	for i := int64(0); i < height; i++ {
+	for i := types.GenesisBlockHeight+int64(0); i < height; i++ {
 		state.LastBlockHeight = i
 		sm.SaveState(stateDB, state)
 	}
@@ -54,7 +54,7 @@ func initializeValidatorState(valAddr []byte, height int64) dbm.DB {
 func TestEvidencePool(t *testing.T) {
 
 	valAddr := []byte("val1")
-	height := int64(5)
+	height := types.GenesisBlockHeight+int64(5)
 	stateDB := initializeValidatorState(valAddr, height)
 	evidenceDB := dbm.NewMemDB()
 	pool := NewEvidencePool(stateDB, evidenceDB)
@@ -88,7 +88,7 @@ func TestEvidencePool(t *testing.T) {
 func TestEvidencePoolIsCommitted(t *testing.T) {
 	// Initialization:
 	valAddr := []byte("validator_address")
-	height := int64(42)
+	height := types.GenesisBlockHeight+int64(42)
 	stateDB := initializeValidatorState(valAddr, height)
 	evidenceDB := dbm.NewMemDB()
 	pool := NewEvidencePool(stateDB, evidenceDB)

@@ -87,7 +87,7 @@ func WALGenerateNBlocks(t *testing.T, wr io.Writer, numBlocks int) (err error) {
 	numBlocksWritten := make(chan struct{})
 	wal := newByteBufferWAL(logger, NewWALEncoder(wr), int64(numBlocks), numBlocksWritten)
 	// see wal.go#103
-	wal.Write(EndHeightMessage{0})
+	wal.Write(EndHeightMessage{types.GenesisBlockHeight})
 	consensusState.wal = wal
 
 	if err := consensusState.Start(); err != nil {
@@ -160,7 +160,7 @@ var fixedTime, _ = time.Parse(time.RFC3339, "2017-01-02T15:04:05Z")
 func newByteBufferWAL(logger log.Logger, enc *WALEncoder, nBlocks int64, signalStop chan<- struct{}) *byteBufferWAL {
 	return &byteBufferWAL{
 		enc:               enc,
-		heightToStop:      nBlocks,
+		heightToStop:      types.GenesisBlockHeight+nBlocks,
 		signalWhenStopsTo: signalStop,
 		logger:            logger,
 	}

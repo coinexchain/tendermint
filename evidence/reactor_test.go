@@ -106,7 +106,7 @@ func _waitForEvidence(
 func sendEvidence(t *testing.T, evpool *EvidencePool, valAddr []byte, n int) types.EvidenceList {
 	evList := make([]types.Evidence, n)
 	for i := 0; i < n; i++ {
-		ev := types.NewMockGoodEvidence(int64(i+1), 0, valAddr)
+		ev := types.NewMockGoodEvidence(types.GenesisBlockHeight + int64(i+1), 0, valAddr)
 		err := evpool.AddEvidence(ev)
 		assert.Nil(t, err)
 		evList[i] = ev
@@ -127,7 +127,7 @@ func TestReactorBroadcastEvidence(t *testing.T) {
 	stateDBs := make([]dbm.DB, N)
 	valAddr := []byte("myval")
 	// we need validators saved for heights at least as high as we have evidence for
-	height := int64(NUM_EVIDENCE) + 10
+	height := types.GenesisBlockHeight + int64(NUM_EVIDENCE) + 10
 	for i := 0; i < N; i++ {
 		stateDBs[i] = initializeValidatorState(valAddr, height)
 	}
@@ -161,8 +161,8 @@ func TestReactorSelectiveBroadcast(t *testing.T) {
 	config := cfg.TestConfig()
 
 	valAddr := []byte("myval")
-	height1 := int64(NUM_EVIDENCE) + 10
-	height2 := int64(NUM_EVIDENCE) / 2
+	height1 := types.GenesisBlockHeight + int64(NUM_EVIDENCE) + 10
+	height2 := types.GenesisBlockHeight + int64(NUM_EVIDENCE) / 2
 
 	// DB1 is ahead of DB2
 	stateDB1 := initializeValidatorState(valAddr, height1)
@@ -215,7 +215,7 @@ func TestEvidenceListMessageValidationBasic(t *testing.T) {
 			valAddr := []byte("myval")
 			evListMsg.Evidence = make([]types.Evidence, n)
 			for i := 0; i < n; i++ {
-				evListMsg.Evidence[i] = types.NewMockGoodEvidence(int64(i+1), 0, valAddr)
+				evListMsg.Evidence[i] = types.NewMockGoodEvidence(types.GenesisBlockHeight + int64(i+1), 0, valAddr)
 			}
 			tc.malleateEvListMsg(evListMsg)
 			assert.Equal(t, tc.expectErr, evListMsg.ValidateBasic() != nil, "Validate Basic had an unexpected result")

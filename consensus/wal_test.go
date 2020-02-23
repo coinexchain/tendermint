@@ -123,7 +123,7 @@ func TestWALWrite(t *testing.T) {
 
 	// 1) Write returns an error if msg is too big
 	msg := &BlockPartMessage{
-		Height: 1,
+		Height: tmtypes.GenesisBlockHeight+1,
 		Round:  1,
 		Part: &tmtypes.Part{
 			Index: 1,
@@ -152,7 +152,7 @@ func TestWALSearchForEndHeight(t *testing.T) {
 	require.NoError(t, err)
 	wal.SetLogger(log.TestingLogger())
 
-	h := int64(3)
+	h := int64(tmtypes.GenesisBlockHeight+3)
 	gr, found, err := wal.SearchForEndHeight(h, &WALSearchOptions{})
 	assert.NoError(t, err, "expected not to err on height %d", h)
 	assert.True(t, found, "expected to find end height for %d", h)
@@ -197,7 +197,7 @@ func TestWALPeriodicSync(t *testing.T) {
 	// The data should have been flushed by the periodic sync
 	assert.Zero(t, wal.Group().Buffered())
 
-	h := int64(4)
+	h := tmtypes.GenesisBlockHeight+4
 	gr, found, err := wal.SearchForEndHeight(h, &WALSearchOptions{})
 	assert.NoError(t, err, "expected not to err on height %d", h)
 	assert.True(t, found, "expected to find end height for %d", h)

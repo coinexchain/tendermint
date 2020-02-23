@@ -56,7 +56,7 @@ func startConsensusNet(t *testing.T, css []*ConsensusState, n int) (
 		require.NoError(t, err)
 		blocksSubs = append(blocksSubs, blocksSub)
 
-		if css[i].state.LastBlockHeight == 0 { //simulate handle initChain in handshake
+		if css[i].state.LastBlockHeight == types.GenesisBlockHeight { //simulate handle initChain in handshake
 			sm.SaveState(css[i].blockExec.DB(), css[i].state)
 		}
 	}
@@ -201,20 +201,21 @@ type mockEvidencePool struct {
 
 func newMockEvidencePool(val []byte) *mockEvidencePool {
 	return &mockEvidencePool{
-		ev: []types.Evidence{types.NewMockGoodEvidence(1, 1, val)},
+		height: int(types.GenesisBlockHeight),
+		ev: []types.Evidence{types.NewMockGoodEvidence(types.GenesisBlockHeight+1, 1, val)},
 	}
 }
 
 // NOTE: maxBytes is ignored
 func (m *mockEvidencePool) PendingEvidence(maxBytes int64) []types.Evidence {
-	if m.height > 0 {
+	if int64(m.height) > types.GenesisBlockHeight {
 		return m.ev
 	}
 	return nil
 }
 func (m *mockEvidencePool) AddEvidence(types.Evidence) error { return nil }
 func (m *mockEvidencePool) Update(block *types.Block, state sm.State) {
-	if m.height > 0 {
+	if int64(m.height) > types.GenesisBlockHeight {
 		if len(block.Evidence.Evidence) == 0 {
 			panic("block has no evidence")
 		}
@@ -257,7 +258,7 @@ func TestReactorReceiveDoesNotPanicIfAddPeerHasntBeenCalledYet(t *testing.T) {
 	var (
 		reactor = reactors[0]
 		peer    = mock.NewPeer(nil)
-		msg     = cdc.MustMarshalBinaryBare(&HasVoteMessage{Height: 1, Round: 1, Index: 1, Type: types.PrevoteType})
+		msg     = cdc.MustMarshalBinaryBare(&HasVoteMessage{Height: types.GenesisBlockHeight+1, Round: 1, Index: 1, Type: types.PrevoteType})
 	)
 
 	reactor.InitPeer(peer)
@@ -279,7 +280,7 @@ func TestReactorReceivePanicsIfInitPeerHasntBeenCalledYet(t *testing.T) {
 	var (
 		reactor = reactors[0]
 		peer    = mock.NewPeer(nil)
-		msg     = cdc.MustMarshalBinaryBare(&HasVoteMessage{Height: 1, Round: 1, Index: 1, Type: types.PrevoteType})
+		msg     = cdc.MustMarshalBinaryBare(&HasVoteMessage{Height: types.GenesisBlockHeight+1, Round: 1, Index: 1, Type: types.PrevoteType})
 	)
 
 	// we should call InitPeer here
@@ -675,12 +676,12 @@ func TestNewRoundStepMessageValidateBasic(t *testing.T) {
 		testName               string
 		messageStep            cstypes.RoundStepType
 	}{
-		{false, 0, 0, 0, "Valid Message", 0x01},
-		{true, -1, 0, 0, "Invalid Message", 0x01},
-		{true, 0, 0, -1, "Invalid Message", 0x01},
-		{true, 0, 0, 1, "Invalid Message", 0x00},
-		{true, 0, 0, 1, "Invalid Message", 0x00},
-		{true, 0, -2, 2, "Invalid Message", 0x01},
+		{false, 0, 0, types.GenesisBlockHeight+0, "Valid Message", 0x01},
+		{true, -1, 0, types.GenesisBlockHeight+0, "Invalid Message", 0x01},
+		{true, 0, 0, types.GenesisBlockHeight-1, "Invalid Message", 0x01},
+		{true, 0, 0, types.GenesisBlockHeight+1, "Invalid Message", 0x00},
+		{true, 0, 0, types.GenesisBlockHeight+1, "Invalid Message", 0x00},
+		{true, 0, -2, types.GenesisBlockHeight+2, "Invalid Message", 0x01},
 	}
 
 	for _, tc := range testCases {
@@ -704,7 +705,7 @@ func TestNewValidBlockMessageValidateBasic(t *testing.T) {
 		expErr     string
 	}{
 		{func(msg *NewValidBlockMessage) {}, ""},
-		{func(msg *NewValidBlockMessage) { msg.Height = -1 }, "Negative Height"},
+		{func(msg *NewValidBlockMessage) { msg.Height = types.GenesisBlockHeight-1 }, "Negative Height"},
 		{func(msg *NewValidBlockMessage) { msg.Round = -1 }, "Negative Round"},
 		{
 			func(msg *NewValidBlockMessage) { msg.BlockPartsHeader.Total = 2 },
@@ -724,7 +725,7 @@ func TestNewValidBlockMessageValidateBasic(t *testing.T) {
 		tc := tc
 		t.Run(fmt.Sprintf("#%d", i), func(t *testing.T) {
 			msg := &NewValidBlockMessage{
-				Height: 1,
+				Height: types.GenesisBlockHeight+1,
 				Round:  0,
 				BlockPartsHeader: types.PartSetHeader{
 					Total: 1,
@@ -747,7 +748,7 @@ func TestProposalPOLMessageValidateBasic(t *testing.T) {
 		expErr     string
 	}{
 		{func(msg *ProposalPOLMessage) {}, ""},
-		{func(msg *ProposalPOLMessage) { msg.Height = -1 }, "Negative Height"},
+		{func(msg *ProposalPOLMessage) { msg.Height = types.GenesisBlockHeight-1 }, "Negative Height"},
 		{func(msg *ProposalPOLMessage) { msg.ProposalPOLRound = -1 }, "Negative ProposalPOLRound"},
 		{func(msg *ProposalPOLMessage) { msg.ProposalPOL = cmn.NewBitArray(0) }, "Empty ProposalPOL bit array"},
 		{func(msg *ProposalPOLMessage) { msg.ProposalPOL = cmn.NewBitArray(types.MaxVotesCount + 1) },
@@ -758,7 +759,7 @@ func TestProposalPOLMessageValidateBasic(t *testing.T) {
 		tc := tc
 		t.Run(fmt.Sprintf("#%d", i), func(t *testing.T) {
 			msg := &ProposalPOLMessage{
-				Height:           1,
+				Height:           types.GenesisBlockHeight+1,
 				ProposalPOLRound: 1,
 				ProposalPOL:      cmn.NewBitArray(1),
 			}
@@ -782,9 +783,9 @@ func TestBlockPartMessageValidateBasic(t *testing.T) {
 		messagePart   *types.Part
 		expectErr     bool
 	}{
-		{"Valid Message", 0, 0, testPart, false},
-		{"Invalid Message", -1, 0, testPart, true},
-		{"Invalid Message", 0, -1, testPart, true},
+		{"Valid Message", types.GenesisBlockHeight+0, 0, testPart, false},
+		{"Invalid Message", types.GenesisBlockHeight-1, 0, testPart, true},
+		{"Invalid Message", types.GenesisBlockHeight+0, -1, testPart, true},
 	}
 
 	for _, tc := range testCases {
@@ -800,7 +801,7 @@ func TestBlockPartMessageValidateBasic(t *testing.T) {
 		})
 	}
 
-	message := BlockPartMessage{Height: 0, Round: 0, Part: new(types.Part)}
+	message := BlockPartMessage{Height: types.GenesisBlockHeight, Round: 0, Part: new(types.Part)}
 	message.Part.Index = -1
 
 	assert.Equal(t, true, message.ValidateBasic() != nil, "Validate Basic had an unexpected result")
@@ -820,11 +821,11 @@ func TestHasVoteMessageValidateBasic(t *testing.T) {
 		testName      string
 		messageType   types.SignedMsgType
 	}{
-		{false, 0, 0, 0, "Valid Message", validSignedMsgType},
-		{true, -1, 0, 0, "Invalid Message", validSignedMsgType},
-		{true, 0, -1, 0, "Invalid Message", validSignedMsgType},
-		{true, 0, 0, 0, "Invalid Message", invalidSignedMsgType},
-		{true, 0, 0, -1, "Invalid Message", validSignedMsgType},
+		{false, 0, 0, types.GenesisBlockHeight, "Valid Message", validSignedMsgType},
+		{true, -1, 0, types.GenesisBlockHeight, "Invalid Message", validSignedMsgType},
+		{true, 0, -1, types.GenesisBlockHeight, "Invalid Message", validSignedMsgType},
+		{true, 0, 0,  types.GenesisBlockHeight, "Invalid Message", invalidSignedMsgType},
+		{true, 0, 0, types.GenesisBlockHeight-1, "Invalid Message", validSignedMsgType},
 	}
 
 	for _, tc := range testCases {
@@ -865,11 +866,11 @@ func TestVoteSetMaj23MessageValidateBasic(t *testing.T) {
 		messageType    types.SignedMsgType
 		messageBlockID types.BlockID
 	}{
-		{false, 0, 0, "Valid Message", validSignedMsgType, validBlockID},
-		{true, -1, 0, "Invalid Message", validSignedMsgType, validBlockID},
-		{true, 0, -1, "Invalid Message", validSignedMsgType, validBlockID},
-		{true, 0, 0, "Invalid Message", invalidSignedMsgType, validBlockID},
-		{true, 0, 0, "Invalid Message", validSignedMsgType, invalidBlockID},
+		{false, 0, types.GenesisBlockHeight+0, "Valid Message", validSignedMsgType, validBlockID},
+		{true, -1, types.GenesisBlockHeight+0, "Invalid Message", validSignedMsgType, validBlockID},
+		{true, 0, types.GenesisBlockHeight-1, "Invalid Message", validSignedMsgType, validBlockID},
+		{true, 0, types.GenesisBlockHeight+0, "Invalid Message", invalidSignedMsgType, validBlockID},
+		{true, 0, types.GenesisBlockHeight+0, "Invalid Message", validSignedMsgType, invalidBlockID},
 	}
 
 	for _, tc := range testCases {
@@ -893,7 +894,7 @@ func TestVoteSetBitsMessageValidateBasic(t *testing.T) {
 		expErr     string
 	}{
 		{func(msg *VoteSetBitsMessage) {}, ""},
-		{func(msg *VoteSetBitsMessage) { msg.Height = -1 }, "Negative Height"},
+		{func(msg *VoteSetBitsMessage) { msg.Height = types.GenesisBlockHeight-1 }, "Negative Height"},
 		{func(msg *VoteSetBitsMessage) { msg.Round = -1 }, "Negative Round"},
 		{func(msg *VoteSetBitsMessage) { msg.Type = 0x03 }, "Invalid Type"},
 		{func(msg *VoteSetBitsMessage) {
@@ -913,7 +914,7 @@ func TestVoteSetBitsMessageValidateBasic(t *testing.T) {
 		tc := tc
 		t.Run(fmt.Sprintf("#%d", i), func(t *testing.T) {
 			msg := &VoteSetBitsMessage{
-				Height:  1,
+				Height:  types.GenesisBlockHeight+1,
 				Round:   0,
 				Type:    0x01,
 				Votes:   cmn.NewBitArray(1),

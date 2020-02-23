@@ -48,11 +48,11 @@ func _TestAppProofs(t *testing.T) {
 
 	prt := defaultProofRuntime()
 	cl := client.NewLocal(node)
-	client.WaitForHeight(cl, 1, nil)
+	client.WaitForHeight(cl, types.GenesisBlockHeight+1, nil)
 
 	// This sets up our trust on the node based on some past point.
 	source := certclient.NewProvider(chainID, cl)
-	seed, err := source.LatestFullCommit(chainID, 1, 1)
+	seed, err := source.LatestFullCommit(chainID, types.GenesisBlockHeight+1, 1)
 	require.NoError(err, "%#v", err)
 	cert := lite.NewBaseVerifier(chainID, seed.Height(), seed.Validators)
 
@@ -77,7 +77,7 @@ func _TestAppProofs(t *testing.T) {
 
 	// Fetch latest after tx commit.
 	<-done
-	latest, err := source.LatestFullCommit(chainID, 1, 1<<63-1)
+	latest, err := source.LatestFullCommit(chainID, types.GenesisBlockHeight+1, 1<<63-1)
 	require.NoError(err, "%#v", err)
 	rootHash := latest.SignedHeader.AppHash
 	if rootHash == nil {
@@ -127,7 +127,7 @@ func TestTxProofs(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	cl := client.NewLocal(node)
-	client.WaitForHeight(cl, 1, nil)
+	client.WaitForHeight(cl, types.GenesisBlockHeight+1, nil)
 
 	tx := kvstoreTx([]byte("key-a"), []byte("value-a"))
 	br, err := cl.BroadcastTxCommit(tx)

@@ -104,6 +104,7 @@ func (conR *ConsensusReactor) SwitchToConsensus(state sm.State, blocksSynced int
 	// NOTE: The line below causes broadcastNewRoundStepRoutine() to
 	// broadcast a NewRoundStepMessage.
 	conR.conS.updateToState(state)
+	fmt.Printf("here %#v\n", state)
 
 	conR.mtx.Lock()
 	conR.fastSync = false
@@ -1421,7 +1422,7 @@ type NewRoundStepMessage struct {
 
 // ValidateBasic performs basic validation.
 func (m *NewRoundStepMessage) ValidateBasic() error {
-	if m.Height < 0 {
+	if m.Height < types.GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if m.Round < 0 {
@@ -1461,7 +1462,7 @@ type NewValidBlockMessage struct {
 
 // ValidateBasic performs basic validation.
 func (m *NewValidBlockMessage) ValidateBasic() error {
-	if m.Height < 0 {
+	if m.Height < types.GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if m.Round < 0 {
@@ -1518,7 +1519,7 @@ type ProposalPOLMessage struct {
 
 // ValidateBasic performs basic validation.
 func (m *ProposalPOLMessage) ValidateBasic() error {
-	if m.Height < 0 {
+	if m.Height < types.GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if m.ProposalPOLRound < 0 {
@@ -1549,7 +1550,7 @@ type BlockPartMessage struct {
 
 // ValidateBasic performs basic validation.
 func (m *BlockPartMessage) ValidateBasic() error {
-	if m.Height < 0 {
+	if m.Height < types.GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if m.Round < 0 {
@@ -1595,7 +1596,7 @@ type HasVoteMessage struct {
 
 // ValidateBasic performs basic validation.
 func (m *HasVoteMessage) ValidateBasic() error {
-	if m.Height < 0 {
+	if m.Height < types.GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if m.Round < 0 {
@@ -1627,7 +1628,7 @@ type VoteSetMaj23Message struct {
 
 // ValidateBasic performs basic validation.
 func (m *VoteSetMaj23Message) ValidateBasic() error {
-	if m.Height < 0 {
+	if m.Height < types.GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if m.Round < 0 {
@@ -1660,7 +1661,7 @@ type VoteSetBitsMessage struct {
 
 // ValidateBasic performs basic validation.
 func (m *VoteSetBitsMessage) ValidateBasic() error {
-	if m.Height < 0 {
+	if m.Height < types.GenesisBlockHeight {
 		return errors.New("Negative Height")
 	}
 	if m.Round < 0 {

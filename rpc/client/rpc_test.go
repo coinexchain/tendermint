@@ -516,7 +516,7 @@ func makeEvidences(
 	vote := &types.Vote{
 		ValidatorAddress: val.Key.Address,
 		ValidatorIndex:   0,
-		Height:           1,
+		Height:           types.GenesisBlockHeight+1,
 		Round:            0,
 		Type:             types.PrevoteType,
 		BlockID: types.BlockID{

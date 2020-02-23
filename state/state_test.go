@@ -180,16 +180,16 @@ func TestValidatorSimpleSaveLoad(t *testing.T) {
 	assert := assert.New(t)
 
 	// Can't load anything for height 0.
-	_, err := sm.LoadValidators(stateDB, 0)
+	_, err := sm.LoadValidators(stateDB, types.GenesisBlockHeight+0)
 	assert.IsType(sm.ErrNoValSetForHeight{}, err, "expected err at height 0")
 
 	// Should be able to load for height 1.
-	v, err := sm.LoadValidators(stateDB, 1)
+	v, err := sm.LoadValidators(stateDB, types.GenesisBlockHeight+1)
 	assert.Nil(err, "expected no err at height 1")
 	assert.Equal(v.Hash(), state.Validators.Hash(), "expected validator hashes to match")
 
 	// Should be able to load for height 2.
-	v, err = sm.LoadValidators(stateDB, 2)
+	v, err = sm.LoadValidators(stateDB, types.GenesisBlockHeight+2)
 	assert.Nil(err, "expected no err at height 2")
 	assert.Equal(v.Hash(), state.NextValidators.Hash(), "expected validator hashes to match")
 
@@ -212,6 +212,9 @@ func TestOneValidatorChangesSaveLoad(t *testing.T) {
 
 	// Change vals at these heights.
 	changeHeights := []int64{1, 2, 4, 5, 10, 15, 16, 17, 20}
+	for i := range changeHeights {
+		changeHeights[i] += types.GenesisBlockHeight
+	}
 	N := len(changeHeights)
 
 	// Build the validator history by running updateState
@@ -222,7 +225,7 @@ func TestOneValidatorChangesSaveLoad(t *testing.T) {
 	power := val.VotingPower
 	var err error
 	var validatorUpdates []*types.Validator
-	for i := int64(1); i < highestHeight; i++ {
+	for i := types.GenesisBlockHeight+1; i < highestHeight; i++ {
 		// When we get to a change height, use the next pubkey.
 		if changeIndex < len(changeHeights) && i == changeHeights[changeIndex] {
 			changeIndex++
@@ -238,21 +241,21 @@ func TestOneValidatorChangesSaveLoad(t *testing.T) {
 	}
 
 	// On each height change, increment the power by one.
-	testCases := make([]int64, highestHeight)
+	testCases := make([]int64, highestHeight-types.GenesisBlockHeight)
 	changeIndex = 0
 	power = val.VotingPower
-	for i := int64(1); i < highestHeight+1; i++ {
+	for i := types.GenesisBlockHeight+1; i < highestHeight+1; i++ {
 		// We get to the height after a change height use the next pubkey (note
 		// our counter starts at 0 this time).
 		if changeIndex < len(changeHeights) && i == changeHeights[changeIndex]+1 {
 			changeIndex++
 			power++
 		}
-		testCases[i-1] = power
+		testCases[i-1-types.GenesisBlockHeight] = power
 	}
 
 	for i, power := range testCases {
-		v, err := sm.LoadValidators(stateDB, int64(i+1+1)) // +1 because vset changes delayed by 1 block.
+		v, err := sm.LoadValidators(stateDB, types.GenesisBlockHeight+int64(i+1+1)) // +1 because vset changes delayed by 1 block.
 		assert.Nil(t, err, fmt.Sprintf("expected no err at height %d", i))
 		assert.Equal(t, v.Size(), 1, "validator set size is greater than 1: %d", v.Size())
 		_, val := v.GetByIndex(0)
@@ -861,7 +864,7 @@ func TestManyValidatorChangesSaveLoad(t *testing.T) {
 	const valSetSize = 7
 	tearDown, stateDB, state := setupTestCase(t)
 	defer tearDown(t)
-	require.Equal(t, int64(0), state.LastBlockHeight)
+	require.Equal(t, types.GenesisBlockHeight, state.LastBlockHeight)
 	state.Validators = genValSet(valSetSize)
 	state.NextValidators = state.Validators.CopyIncrementProposerPriority(1)
 	sm.SaveState(stateDB, state)
@@ -970,12 +973,12 @@ func TestConsensusParamsChangesSaveLoad(t *testing.T) {
 			changeIndex++
 			cp = params[changeIndex]
 		}
-		testCases[i-1] = paramsChangeTestCase{i, cp}
+		testCases[i-1] = paramsChangeTestCase{types.GenesisBlockHeight+i, cp}
 	}
 
 	for _, testCase := range testCases {
 		p, err := sm.LoadConsensusParams(stateDB, testCase.height)
-		assert.Nil(t, err, fmt.Sprintf("expected no err at height %d", testCase.height))
+		assert.Nil(t, err, fmt.Sprintf("expected no err at height %d", types.GenesisBlockHeight+testCase.height))
 		assert.Equal(t, testCase.params, p, fmt.Sprintf(`unexpected consensus params at
                 height %d`, testCase.height))
 	}

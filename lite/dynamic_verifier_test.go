@@ -34,7 +34,7 @@ func TestInquirerValidPath(t *testing.T) {
 	for i := 0; i < count; i++ {
 		vals := keys.ToValidators(vote, 0)
 		nextVals := nkeys.ToValidators(vote, 0)
-		h := int64(1 + i)
+		h := types.GenesisBlockHeight + int64(1 + i)
 		appHash := []byte(fmt.Sprintf("h=%d", h))
 		fcz[i] = keys.GenFullCommit(
 			chainID, h, nil,
@@ -94,15 +94,15 @@ func TestDynamicVerify(t *testing.T) {
 
 	// make some commits with the first
 	for i := 0; i < n1; i++ {
-		fcz[i] = makeFullCommit(int64(i), keys1, vals1, vals1, chainID)
+		fcz[i] = makeFullCommit(types.GenesisBlockHeight + int64(i), keys1, vals1, vals1, chainID)
 	}
 
 	// update the val set
-	fcz[n1] = makeFullCommit(int64(n1), keys1, vals1, vals2, chainID)
+	fcz[n1] = makeFullCommit(types.GenesisBlockHeight + int64(n1), keys1, vals1, vals2, chainID)
 
 	// make some commits with the new one
 	for i := n1 + 1; i < nCommits; i++ {
-		fcz[i] = makeFullCommit(int64(i), keys2, vals2, vals2, chainID)
+		fcz[i] = makeFullCommit(types.GenesisBlockHeight + int64(i), keys2, vals2, vals2, chainID)
 	}
 
 	// Save everything in the source
@@ -155,7 +155,7 @@ func TestInquirerVerifyHistorical(t *testing.T) {
 	for i := 0; i < count; i++ {
 		vals := keys.ToValidators(vote, 0)
 		nextVals := nkeys.ToValidators(vote, 0)
-		h := int64(1 + i)
+		h := types.GenesisBlockHeight + int64(1 + i)
 		appHash := []byte(fmt.Sprintf("h=%d", h))
 		resHash := []byte(fmt.Sprintf("res=%d", h))
 		fcz[i] = keys.GenFullCommit(
@@ -238,7 +238,7 @@ func TestConcurrencyInquirerVerify(t *testing.T) {
 	for i := 0; i < count; i++ {
 		vals := keys.ToValidators(vote, 0)
 		nextVals := nkeys.ToValidators(vote, 0)
-		h := int64(1 + i)
+		h := types.GenesisBlockHeight + int64(1 + i)
 		appHash := []byte(fmt.Sprintf("h=%d", h))
 		resHash := []byte(fmt.Sprintf("res=%d", h))
 		fcz[i] = keys.GenFullCommit(

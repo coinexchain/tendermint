@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/types"
 )
 
 // DefaultDirPerm is the default permissions used when creating directories.
@@ -458,8 +459,8 @@ var testPrivValidatorKey = `{
   }
 }`
 
-var testPrivValidatorState = `{
-  "height": "0",
+var testPrivValidatorState = fmt.Sprintf(`{
+  "height": "%d",
   "round": "0",
   "step": 0
-}`
+}`, types.GenesisBlockHeight)

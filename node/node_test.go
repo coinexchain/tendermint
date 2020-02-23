@@ -227,7 +227,7 @@ func TestCreateProposalBlock(t *testing.T) {
 
 	logger := log.TestingLogger()
 
-	var height int64 = 1
+	var height int64 = types.GenesisBlockHeight + 1
 	state, stateDB := state(1, height)
 	maxBytes := 16384
 	state.ConsensusParams.Block.MaxBytes = int64(maxBytes)
@@ -257,7 +257,7 @@ func TestCreateProposalBlock(t *testing.T) {
 	minEvSize := 12
 	numEv := (maxBytes / types.MaxEvidenceBytesDenominator) / minEvSize
 	for i := 0; i < numEv; i++ {
-		ev := types.NewMockRandomGoodEvidence(1, proposerAddr, cmn.RandBytes(minEvSize))
+		ev := types.NewMockRandomGoodEvidence(types.GenesisBlockHeight+1, proposerAddr, cmn.RandBytes(minEvSize))
 		err := evidencePool.AddEvidence(ev)
 		assert.NoError(t, err)
 	}
@@ -345,7 +345,7 @@ func state(nVals int, height int64) (sm.State, dbm.DB) {
 	stateDB := dbm.NewMemDB()
 	sm.SaveState(stateDB, s)
 
-	for i := 1; i < int(height); i++ {
+	for i := types.GenesisBlockHeight + 1; i < height; i++ {
 		s.LastBlockHeight++
 		s.LastValidators = s.Validators.Copy()
 		sm.SaveState(stateDB, s)

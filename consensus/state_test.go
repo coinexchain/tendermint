@@ -1565,7 +1565,7 @@ func TestStateOutputsBlockPartsStats(t *testing.T) {
 	// 1) new block part
 	parts := types.NewPartSetFromData(cmn.RandBytes(100), 10)
 	msg := &BlockPartMessage{
-		Height: 1,
+		Height: types.GenesisBlockHeight+1,
 		Round:  0,
 		Part:   parts.GetPart(0),
 	}
@@ -1585,11 +1585,11 @@ func TestStateOutputsBlockPartsStats(t *testing.T) {
 	cs.handleMsg(msgInfo{msg, peer.ID()})
 
 	// sending the part from the smaller height
-	msg.Height = 0
+	msg.Height = types.GenesisBlockHeight+0
 	cs.handleMsg(msgInfo{msg, peer.ID()})
 
 	// sending the part from the bigger height
-	msg.Height = 3
+	msg.Height = types.GenesisBlockHeight+3
 	cs.handleMsg(msgInfo{msg, peer.ID()})
 
 	select {

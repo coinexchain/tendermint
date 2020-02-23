@@ -32,12 +32,12 @@ func TestApplyBlock(t *testing.T) {
 	require.Nil(t, err)
 	defer proxyApp.Stop()
 
-	state, stateDB, _ := makeState(1, 1)
+	state, stateDB, _ := makeState(1, types.GenesisBlockHeight+1)
 
 	blockExec := sm.NewBlockExecutor(stateDB, log.TestingLogger(), proxyApp.Consensus(),
 		mock.Mempool{}, sm.MockEvidencePool{})
 
-	block := makeBlock(state, 1)
+	block := makeBlock(state, types.GenesisBlockHeight+1)
 	blockID := types.BlockID{Hash: block.Hash(), PartsHeader: block.MakePartSet(testPartSize).Header()}
 
 	//nolint:ineffassign
@@ -56,7 +56,7 @@ func TestBeginBlockValidators(t *testing.T) {
 	require.Nil(t, err)
 	defer proxyApp.Stop()
 
-	state, stateDB, _ := makeState(2, 2)
+	state, stateDB, _ := makeState(2, types.GenesisBlockHeight+2)
 
 	prevHash := state.LastBlockID.Hash
 	prevParts := types.PartSetHeader{}
@@ -80,7 +80,7 @@ func TestBeginBlockValidators(t *testing.T) {
 		lastCommit := types.NewCommit(prevBlockID, tc.lastCommitPrecommits)
 
 		// block for height 2
-		block, _ := state.MakeBlock(2, makeTxs(2), lastCommit, nil, state.Validators.GetProposer().Address)
+		block, _ := state.MakeBlock(types.GenesisBlockHeight+2, makeTxs(2), lastCommit, nil, state.Validators.GetProposer().Address)
 
 		_, err = sm.ExecCommitBlock(proxyApp.Consensus(), block, log.TestingLogger(), stateDB)
 		require.Nil(t, err, tc.desc)
@@ -109,14 +109,14 @@ func TestBeginBlockByzantineValidators(t *testing.T) {
 	require.Nil(t, err)
 	defer proxyApp.Stop()
 
-	state, stateDB, _ := makeState(2, 12)
+	state, stateDB, _ := makeState(2, types.GenesisBlockHeight+12)
 
 	prevHash := state.LastBlockID.Hash
 	prevParts := types.PartSetHeader{}
 	prevBlockID := types.BlockID{Hash: prevHash, PartsHeader: prevParts}
 
-	height1, idx1, val1 := int64(8), 0, state.Validators.Validators[0].Address
-	height2, idx2, val2 := int64(3), 1, state.Validators.Validators[1].Address
+	height1, idx1, val1 := types.GenesisBlockHeight+int64(8), 0, state.Validators.Validators[0].Address
+	height2, idx2, val2 := types.GenesisBlockHeight+int64(3), 1, state.Validators.Validators[1].Address
 	ev1 := types.NewMockGoodEvidence(height1, idx1, val1)
 	ev2 := types.NewMockGoodEvidence(height2, idx2, val2)
 
@@ -140,7 +140,7 @@ func TestBeginBlockByzantineValidators(t *testing.T) {
 	lastCommit := types.NewCommit(prevBlockID, commitSigs)
 	for _, tc := range testCases {
 
-		block, _ := state.MakeBlock(10, makeTxs(2), lastCommit, nil, state.Validators.GetProposer().Address)
+		block, _ := state.MakeBlock(types.GenesisBlockHeight+10, makeTxs(2), lastCommit, nil, state.Validators.GetProposer().Address)
 		block.Time = now
 		block.Evidence.Evidence = tc.evidence
 		_, err = sm.ExecCommitBlock(proxyApp.Consensus(), block, log.TestingLogger(), stateDB)
@@ -307,7 +307,7 @@ func TestEndBlockValidatorUpdates(t *testing.T) {
 	require.Nil(t, err)
 	defer proxyApp.Stop()
 
-	state, stateDB, _ := makeState(1, 1)
+	state, stateDB, _ := makeState(1, types.GenesisBlockHeight+1)
 
 	blockExec := sm.NewBlockExecutor(
 		stateDB,
@@ -330,7 +330,7 @@ func TestEndBlockValidatorUpdates(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	block := makeBlock(state, 1)
+	block := makeBlock(state, types.GenesisBlockHeight+1)
 	blockID := types.BlockID{Hash: block.Hash(), PartsHeader: block.MakePartSet(testPartSize).Header()}
 
 	pubkey := ed25519.GenPrivKey().PubKey()
@@ -375,7 +375,7 @@ func TestEndBlockValidatorUpdatesResultingInEmptySet(t *testing.T) {
 	require.Nil(t, err)
 	defer proxyApp.Stop()
 
-	state, stateDB, _ := makeState(1, 1)
+	state, stateDB, _ := makeState(1, types.GenesisBlockHeight+1)
 	blockExec := sm.NewBlockExecutor(
 		stateDB,
 		log.TestingLogger(),
@@ -384,7 +384,7 @@ func TestEndBlockValidatorUpdatesResultingInEmptySet(t *testing.T) {
 		sm.MockEvidencePool{},
 	)
 
-	block := makeBlock(state, 1)
+	block := makeBlock(state, types.GenesisBlockHeight+1)
 	blockID := types.BlockID{Hash: block.Hash(), PartsHeader: block.MakePartSet(testPartSize).Header()}
 
 	// Remove the only validator

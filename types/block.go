@@ -16,7 +16,7 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
-var GenesisBlockHeight = int64(10)
+var GenesisBlockHeight = int64(5)
 
 const (
 	// MaxHeaderBytes is a maximum header size (including amino overhead).
@@ -57,7 +57,7 @@ func (b *Block) ValidateBasic() error {
 		return fmt.Errorf("ChainID is too long. Max is %d, got %d", MaxChainIDLen, len(b.ChainID))
 	}
 
-	if b.Height < 0 {
+	if b.Height < GenesisBlockHeight {
 		return errors.New("Negative Header.Height")
 	} else if b.Height == 0 {
 		return errors.New("Zero Header.Height")

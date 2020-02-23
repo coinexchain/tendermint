@@ -8,6 +8,7 @@ import (
 
 	"github.com/tendermint/tendermint/abci/example/code"
 	"github.com/tendermint/tendermint/abci/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/version"
 	dbm "github.com/tendermint/tm-db"
@@ -30,6 +31,7 @@ type State struct {
 func loadState(db dbm.DB) State {
 	stateBytes := db.Get(stateKey)
 	var state State
+	state.Height = tmtypes.GenesisBlockHeight
 	if len(stateBytes) != 0 {
 		err := json.Unmarshal(stateBytes, &state)
 		if err != nil {

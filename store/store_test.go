@@ -97,7 +97,7 @@ func TestNewBlockStore(t *testing.T) {
 
 	db.Set(blockStoreKey, nil)
 	bs = NewBlockStore(db)
-	assert.Equal(t, bs.Height(), int64(0), "expecting nil bytes to be unmarshaled alright")
+	assert.Equal(t, bs.Height(), types.GenesisBlockHeight, "expecting nil bytes to be unmarshaled alright")
 }
 
 func freshBlockStore() (*BlockStore, db.DB) {
@@ -121,7 +121,7 @@ func TestMain(m *testing.M) {
 	partSet = block.MakePartSet(2)
 	part1 = partSet.GetPart(0)
 	part2 = partSet.GetPart(1)
-	seenCommit1 = makeTestCommit(10, tmtime.Now())
+	seenCommit1 = makeTestCommit(types.GenesisBlockHeight+10, tmtime.Now())
 	code := m.Run()
 	cleanup()
 	os.Exit(code)
@@ -132,11 +132,12 @@ func TestMain(m *testing.M) {
 func TestBlockStoreSaveLoadBlock(t *testing.T) {
 	state, bs, cleanup := makeStateAndBlockStore(log.NewTMLogger(new(bytes.Buffer)))
 	defer cleanup()
-	require.Equal(t, bs.Height(), int64(0), "initially the height should be zero")
+	require.Equal(t, bs.Height(), types.GenesisBlockHeight, "initially the height should be zero")
 
 	// check there are no blocks at various heights
 	noBlockHeights := []int64{0, -1, 100, 1000, 2}
 	for i, height := range noBlockHeights {
+		height += types.GenesisBlockHeight
 		if g := bs.LoadBlock(height); g != nil {
 			t.Errorf("#%d: height(%d) got a block; want nil", i, height)
 		}
@@ -145,7 +146,7 @@ func TestBlockStoreSaveLoadBlock(t *testing.T) {
 	// save a block
 	block := makeBlock(bs.Height()+1, state, new(types.Commit))
 	validPartSet := block.MakePartSet(2)
-	seenCommit := makeTestCommit(10, tmtime.Now())
+	seenCommit := makeTestCommit(types.GenesisBlockHeight+10, tmtime.Now())
 	bs.SaveBlock(block, partSet, seenCommit)
 	require.Equal(t, bs.Height(), block.Header.Height, "expecting the new height to be changed")
 
@@ -154,17 +155,17 @@ func TestBlockStoreSaveLoadBlock(t *testing.T) {
 	uncontiguousPartSet.AddPart(part2)
 
 	header1 := types.Header{
-		Height:  1,
+		Height:  types.GenesisBlockHeight+1,
 		NumTxs:  100,
 		ChainID: "block_test",
 		Time:    tmtime.Now(),
 	}
 	header2 := header1
-	header2.Height = 4
+	header2.Height = types.GenesisBlockHeight+4
 
 	// End of setup, test data
 
-	commitAtH10 := makeTestCommit(10, tmtime.Now())
+	commitAtH10 := makeTestCommit(types.GenesisBlockHeight+10, tmtime.Now())
 	tuples := []struct {
 		block      *types.Block
 		parts      *types.PartSet
@@ -385,11 +386,11 @@ func TestLoadBlockMeta(t *testing.T) {
 func TestBlockFetchAtHeight(t *testing.T) {
 	state, bs, cleanup := makeStateAndBlockStore(log.NewTMLogger(new(bytes.Buffer)))
 	defer cleanup()
-	require.Equal(t, bs.Height(), int64(0), "initially the height should be zero")
+	require.Equal(t, bs.Height(), types.GenesisBlockHeight, "initially the height should be zero")
 	block := makeBlock(bs.Height()+1, state, new(types.Commit))
 
 	partSet := block.MakePartSet(2)
-	seenCommit := makeTestCommit(10, tmtime.Now())
+	seenCommit := makeTestCommit(types.GenesisBlockHeight+10, tmtime.Now())
 	bs.SaveBlock(block, partSet, seenCommit)
 	require.Equal(t, bs.Height(), block.Header.Height, "expecting the new height to be changed")
 

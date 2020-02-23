@@ -108,9 +108,9 @@ func newBlockchainReactor(
 	sm.SaveState(db, state)
 
 	// let's add some blocks in
-	for blockHeight := int64(1); blockHeight <= maxBlockHeight; blockHeight++ {
+	for blockHeight := types.GenesisBlockHeight+1; blockHeight <= maxBlockHeight; blockHeight++ {
 		lastCommit := types.NewCommit(types.BlockID{}, nil)
-		if blockHeight > 1 {
+		if blockHeight > types.GenesisBlockHeight+1 {
 			lastBlockMeta := blockStore.LoadBlockMeta(blockHeight - 1)
 			lastBlock := blockStore.LoadBlock(blockHeight - 1)
 
@@ -199,8 +199,8 @@ func TestFastSyncNoBlockResponse(t *testing.T) {
 		existent bool
 	}{
 		{maxBlockHeight + 2, false},
-		{10, true},
-		{1, true},
+		{types.GenesisBlockHeight+10, true},
+		{types.GenesisBlockHeight+1, true},
 		{maxBlockHeight + 100, false},
 	}
 

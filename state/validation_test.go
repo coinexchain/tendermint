@@ -22,7 +22,7 @@ func TestValidateBlockHeader(t *testing.T) {
 	require.NoError(t, proxyApp.Start())
 	defer proxyApp.Stop()
 
-	state, stateDB, privVals := makeState(3, 1)
+	state, stateDB, privVals := makeState(3, types.GenesisBlockHeight+1)
 	blockExec := sm.NewBlockExecutor(
 		stateDB,
 		log.TestingLogger(),
@@ -68,7 +68,7 @@ func TestValidateBlockHeader(t *testing.T) {
 	}
 
 	// Build up state for multiple heights
-	for height := int64(1); height < validationTestsStopHeight; height++ {
+	for height := types.GenesisBlockHeight+1; height < validationTestsStopHeight; height++ {
 		proposerAddr := state.Validators.GetProposer().Address
 		/*
 			Invalid blocks don't pass
@@ -94,7 +94,7 @@ func TestValidateBlockCommit(t *testing.T) {
 	require.NoError(t, proxyApp.Start())
 	defer proxyApp.Stop()
 
-	state, stateDB, privVals := makeState(1, 1)
+	state, stateDB, privVals := makeState(1, types.GenesisBlockHeight+1)
 	blockExec := sm.NewBlockExecutor(
 		stateDB,
 		log.TestingLogger(),
@@ -106,9 +106,9 @@ func TestValidateBlockCommit(t *testing.T) {
 	wrongPrecommitsCommit := types.NewCommit(types.BlockID{}, nil)
 	badPrivVal := types.NewMockPV()
 
-	for height := int64(1); height < validationTestsStopHeight; height++ {
+	for height := types.GenesisBlockHeight+1; height < validationTestsStopHeight; height++ {
 		proposerAddr := state.Validators.GetProposer().Address
-		if height > 1 {
+		if height > types.GenesisBlockHeight + 1 {
 			/*
 				#2589: ensure state.LastValidators.VerifyCommit fails here
 			*/
@@ -183,7 +183,7 @@ func TestValidateBlockEvidence(t *testing.T) {
 	require.NoError(t, proxyApp.Start())
 	defer proxyApp.Stop()
 
-	state, stateDB, privVals := makeState(3, 1)
+	state, stateDB, privVals := makeState(3, types.GenesisBlockHeight+1)
 	blockExec := sm.NewBlockExecutor(
 		stateDB,
 		log.TestingLogger(),
@@ -193,11 +193,11 @@ func TestValidateBlockEvidence(t *testing.T) {
 	)
 	lastCommit := types.NewCommit(types.BlockID{}, nil)
 
-	for height := int64(1); height < validationTestsStopHeight; height++ {
+	for height := types.GenesisBlockHeight+1; height < validationTestsStopHeight; height++ {
 		proposerAddr := state.Validators.GetProposer().Address
 		proposerIdx, _ := state.Validators.GetByAddress(proposerAddr)
 		goodEvidence := types.NewMockGoodEvidence(height, proposerIdx, proposerAddr)
-		if height > 1 {
+		if height > types.GenesisBlockHeight+1 {
 			/*
 				A block with too much evidence fails
 			*/
@@ -242,8 +242,8 @@ func TestValidateBlockEvidence(t *testing.T) {
 }
 
 func TestValidateFailBlockOnCommittedEvidence(t *testing.T) {
-	var height int64 = 1
-	state, stateDB, _ := makeState(1, int(height))
+	var height int64 = types.GenesisBlockHeight+1
+	state, stateDB, _ := makeState(1, height)
 
 	blockExec := sm.NewBlockExecutor(stateDB, log.TestingLogger(), nil, nil, mockEvPoolAlwaysCommitted{})
 	// A block with a couple pieces of evidence passes.
