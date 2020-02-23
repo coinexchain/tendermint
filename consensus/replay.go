@@ -250,9 +250,7 @@ func (h *Handshaker) Handshake(proxyApp proxy.AppConns) error {
 	if blockHeight < types.GenesisBlockHeight {
 		return fmt.Errorf("Got a negative last block height (%d) from the app", blockHeight)
 	}
-	if blockHeight == 0 {
-		blockHeight = types.GenesisBlockHeight
-	}
+
 	appHash := res.LastBlockAppHash
 
 	h.logger.Info("ABCI Handshake App Info",

@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	HomeFlag     = "home"
-	TraceFlag    = "trace"
-	OutputFlag   = "output"
-	EncodingFlag = "encoding"
+	HomeFlag           = "home"
+	TraceFlag          = "trace"
+	OutputFlag         = "output"
+	EncodingFlag       = "encoding"
+	GenesisBlockHeight = "genesis_block_height"
 )
 
 // Executable is the minimal interface to *corba.Command, so we can

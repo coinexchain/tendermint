@@ -155,6 +155,9 @@ type BaseConfig struct { //nolint: maligned
 	// A custom human readable name for this node
 	Moniker string `mapstructure:"moniker"`
 
+	// Genesis Block Height, default is 0
+	GenesisBlockHeight int64 `mapstructure:"genesis_block_height"`
+
 	// If this node is many blocks behind the tip of the chain, FastSync
 	// allows them to catchup quickly by downloading blocks in parallel
 	// and verifying their commits
@@ -218,6 +221,7 @@ func DefaultBaseConfig() BaseConfig {
 		PrivValidatorState: defaultPrivValStatePath,
 		NodeKey:            defaultNodeKeyPath,
 		Moniker:            defaultMoniker,
+		GenesisBlockHeight: 0,
 		ProxyApp:           "tcp://127.0.0.1:26658",
 		ABCI:               "socket",
 		LogLevel:           DefaultPackageLogLevels(),
@@ -735,7 +739,7 @@ type ConsensusConfig struct {
 	WalPath string `mapstructure:"wal_file"`
 	walFile string // overrides WalPath if set
 
-	TargetBlockInterval   time.Duration `mapstructure:"target_block_interval"`
+	TargetBlockInterval time.Duration `mapstructure:"target_block_interval"`
 
 	TimeoutPropose        time.Duration `mapstructure:"timeout_propose"`
 	TimeoutProposeDelta   time.Duration `mapstructure:"timeout_propose_delta"`
@@ -772,8 +776,8 @@ func DefaultConsensusConfig() *ConsensusConfig {
 		TimeoutPrecommitDelta:       500 * time.Millisecond,
 		TimeoutCommit:               1000 * time.Millisecond,
 		TimeoutCommitUpper:          1500 * time.Millisecond,
-		TimeoutCommitLower:           500 * time.Millisecond,
-		TimeoutCommitDelta:           100 * time.Millisecond,
+		TimeoutCommitLower:          500 * time.Millisecond,
+		TimeoutCommitDelta:          100 * time.Millisecond,
 		SkipTimeoutCommit:           false,
 		CreateEmptyBlocks:           true,
 		CreateEmptyBlocksInterval:   0 * time.Second,

@@ -16,7 +16,7 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
-var GenesisBlockHeight = int64(5)
+var GenesisBlockHeight = int64(0)
 
 const (
 	// MaxHeaderBytes is a maximum header size (including amino overhead).
