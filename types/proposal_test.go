@@ -111,7 +111,7 @@ func TestProposalValidateBasic(t *testing.T) {
 	}{
 		{"Good Proposal", func(p *Proposal) {}, false},
 		{"Invalid Type", func(p *Proposal) { p.Type = PrecommitType }, true},
-		{"Invalid Height", func(p *Proposal) { p.Height = -1 }, true},
+		{"Invalid Height", func(p *Proposal) { p.Height = GenesisBlockHeight-1 }, true},
 		{"Invalid Round", func(p *Proposal) { p.Round = -1 }, true},
 		{"Invalid POLRound", func(p *Proposal) { p.POLRound = -2 }, true},
 		{"Invalid BlockId", func(p *Proposal) {
@@ -130,7 +130,7 @@ func TestProposalValidateBasic(t *testing.T) {
 		tc := tc
 		t.Run(tc.testName, func(t *testing.T) {
 			prop := NewProposal(
-				4, 2, 2,
+				GenesisBlockHeight+4, 2, 2,
 				blockID)
 			err := privVal.SignProposal("test_chain_id", prop)
 			require.NoError(t, err)

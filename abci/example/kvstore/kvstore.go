@@ -74,6 +74,8 @@ func (app *KVStoreApplication) Info(req types.RequestInfo) (resInfo types.Respon
 		Data:       fmt.Sprintf("{\"size\":%v}", app.state.Size),
 		Version:    version.ABCIVersion,
 		AppVersion: ProtocolVersion.Uint64(),
+
+		LastBlockHeight: app.state.Height,
 	}
 }
 

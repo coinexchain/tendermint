@@ -511,7 +511,6 @@ func TestHandshakeReplayAll(t *testing.T) {
 
 // Sync many, not from scratch
 func TestHandshakeReplaySome(t *testing.T) {
-	fmt.Printf("init %v\nb", sim.GenesisState)
 	for _, m := range modes {
 		testHandshakeReplay(t, config, 1, m, false)
 	}
@@ -924,6 +923,10 @@ func (app *badApp) Commit() abci.ResponseCommit {
 	panic("either allHashesAreWrong or onlyLastHashIsWrong must be set")
 }
 
+func (app *badApp) Info(req abci.RequestInfo) abci.ResponseInfo {
+	return abci.ResponseInfo{LastBlockHeight: int64(app.height)}
+}
+
 //--------------------------
 // utils for making blocks
 
@@ -1128,4 +1131,8 @@ func (ica *initChainApp) InitChain(req abci.RequestInitChain) abci.ResponseInitC
 	return abci.ResponseInitChain{
 		Validators: ica.vals,
 	}
+}
+
+func (ica *initChainApp) Info(req abci.RequestInfo) abci.ResponseInfo {
+	return abci.ResponseInfo{LastBlockHeight: types.GenesisBlockHeight}
 }

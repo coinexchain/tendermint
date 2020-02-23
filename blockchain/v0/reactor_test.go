@@ -261,9 +261,9 @@ func TestBcBlockRequestMessageValidateBasic(t *testing.T) {
 		requestHeight int64
 		expectErr     bool
 	}{
-		{"Valid Request Message", 0, false},
-		{"Valid Request Message", 1, false},
-		{"Invalid Request Message", -1, true},
+		{"Valid Request Message", types.GenesisBlockHeight+0, false},
+		{"Valid Request Message", types.GenesisBlockHeight+1, false},
+		{"Invalid Request Message", types.GenesisBlockHeight-1, true},
 	}
 
 	for _, tc := range testCases {
@@ -281,9 +281,9 @@ func TestBcNoBlockResponseMessageValidateBasic(t *testing.T) {
 		nonResponseHeight int64
 		expectErr         bool
 	}{
-		{"Valid Non-Response Message", 0, false},
-		{"Valid Non-Response Message", 1, false},
-		{"Invalid Non-Response Message", -1, true},
+		{"Valid Non-Response Message", types.GenesisBlockHeight+0, false},
+		{"Valid Non-Response Message", types.GenesisBlockHeight+1, false},
+		{"Invalid Non-Response Message", types.GenesisBlockHeight-1, true},
 	}
 
 	for _, tc := range testCases {
@@ -301,9 +301,9 @@ func TestBcStatusRequestMessageValidateBasic(t *testing.T) {
 		requestHeight int64
 		expectErr     bool
 	}{
-		{"Valid Request Message", 0, false},
-		{"Valid Request Message", 1, false},
-		{"Invalid Request Message", -1, true},
+		{"Valid Request Message", types.GenesisBlockHeight+0, false},
+		{"Valid Request Message", types.GenesisBlockHeight+1, false},
+		{"Invalid Request Message", types.GenesisBlockHeight-1, true},
 	}
 
 	for _, tc := range testCases {
@@ -321,9 +321,9 @@ func TestBcStatusResponseMessageValidateBasic(t *testing.T) {
 		responseHeight int64
 		expectErr      bool
 	}{
-		{"Valid Response Message", 0, false},
-		{"Valid Response Message", 1, false},
-		{"Invalid Response Message", -1, true},
+		{"Valid Response Message", types.GenesisBlockHeight+0, false},
+		{"Valid Response Message", types.GenesisBlockHeight+1, false},
+		{"Invalid Response Message", types.GenesisBlockHeight-1, true},
 	}
 
 	for _, tc := range testCases {
