@@ -39,6 +39,8 @@ var (
 	msgQueueSize = 1000
 )
 
+const AdjustTimeoutCommit = false
+
 // msgs from the reactor which may update the state
 type msgInfo struct {
 	Msg    ConsensusMessage `json:"msg"`
@@ -1425,15 +1427,17 @@ func (cs *ConsensusState) finalizeCommit(height int64) {
 	stateCopy := cs.state.Copy()
 
 	// Adjust TimeoutCommit
-	if cs.lastBlockTime.Unix() != 0 {
-		diff := block.Header.Time.Sub(cs.lastBlockTime)
-		if diff.Nanoseconds() < cs.config.TargetBlockInterval.Nanoseconds() {
-			cs.config.IncrTimeoutCommit()
-		} else if diff.Nanoseconds() > cs.config.TargetBlockInterval.Nanoseconds() {
-			cs.config.DecrTimeoutCommit()
+	if AdjustTimeoutCommit {
+		if cs.lastBlockTime.Unix() != 0 {
+			diff := block.Header.Time.Sub(cs.lastBlockTime)
+			if diff.Nanoseconds() < cs.config.TargetBlockInterval.Nanoseconds() {
+				cs.config.IncrTimeoutCommit()
+			} else if diff.Nanoseconds() > cs.config.TargetBlockInterval.Nanoseconds() {
+				cs.config.DecrTimeoutCommit()
+			}
 		}
+		cs.lastBlockTime = block.Header.Time
 	}
-	cs.lastBlockTime = block.Header.Time
 
 	// Execute and commit the block, update and save the state, and update the mempool.
 	// NOTE The block.AppHash wont reflect these txs until the next block.
