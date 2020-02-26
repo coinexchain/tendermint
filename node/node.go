@@ -202,19 +202,21 @@ type Node struct {
 	prometheusSrv    *http.Server
 }
 
-func initDBs(config *cfg.Config, dbProvider DBProvider) (blockStore *store.BlockStore, stateDB dbm.DB, err error) {
+func initBlockStoreDB(config *cfg.Config, dbProvider DBProvider) (blockStore *store.BlockStore, err error) {
 	var blockStoreDB dbm.DB
 	blockStoreDB, err = dbProvider(&DBContext{"blockstore", config})
 	if err != nil {
 		return
 	}
 	blockStore = store.NewBlockStore(blockStoreDB)
+	return
+}
 
+func initStateDB(config *cfg.Config, dbProvider DBProvider) (stateDB dbm.DB, err error) {
 	stateDB, err = dbProvider(&DBContext{"state", config})
 	if err != nil {
 		return
 	}
-
 	return
 }
 
@@ -559,7 +561,7 @@ func NewNode(config *cfg.Config,
 	logger log.Logger,
 	options ...Option) (*Node, error) {
 
-	blockStore, stateDB, err := initDBs(config, dbProvider)
+	stateDB, err := initStateDB(config, dbProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -569,8 +571,9 @@ func NewNode(config *cfg.Config,
 		return nil, err
 	}
 
-	if blockStore.Height() == 0 {
-		blockStore.SetHeight(types.GenesisBlockHeight)
+	blockStore, err := initBlockStoreDB(config, dbProvider)
+	if err != nil {
+		return nil, err
 	}
 
 	// Create the proxyApp and establish connections to the ABCI app (consensus, mempool, query).
