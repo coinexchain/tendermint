@@ -233,7 +233,7 @@ func MakeGenesisState(genDoc *types.GenesisDoc) (State, error) {
 		Version: initStateVersion,
 		ChainID: genDoc.ChainID,
 
-		LastBlockHeight: types.GenesisBlockHeight,
+		LastBlockHeight: genDoc.GenesisBlockHeight,
 		LastBlockID:     types.BlockID{},
 		LastBlockTime:   genDoc.GenesisTime,
 

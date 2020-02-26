@@ -35,12 +35,13 @@ type GenesisValidator struct {
 
 // GenesisDoc defines the initial conditions for a tendermint blockchain, in particular its validator set.
 type GenesisDoc struct {
-	GenesisTime     time.Time          `json:"genesis_time"`
-	ChainID         string             `json:"chain_id"`
-	ConsensusParams *ConsensusParams   `json:"consensus_params,omitempty"`
-	Validators      []GenesisValidator `json:"validators,omitempty"`
-	AppHash         cmn.HexBytes       `json:"app_hash"`
-	AppState        json.RawMessage    `json:"app_state,omitempty"`
+	GenesisTime        time.Time          `json:"genesis_time"`
+	ChainID            string             `json:"chain_id"`
+	GenesisBlockHeight int64              `json:"genesis_block_height"`
+	ConsensusParams    *ConsensusParams   `json:"consensus_params,omitempty"`
+	Validators         []GenesisValidator `json:"validators,omitempty"`
+	AppHash            cmn.HexBytes       `json:"app_hash"`
+	AppState           json.RawMessage    `json:"app_state,omitempty"`
 }
 
 // SaveAs is a utility method for saving GenensisDoc as a JSON file.
@@ -70,6 +71,9 @@ func (genDoc *GenesisDoc) ValidateAndComplete() error {
 	}
 	if len(genDoc.ChainID) > MaxChainIDLen {
 		return errors.Errorf("chain_id in genesis doc is too long (max: %d)", MaxChainIDLen)
+	}
+	if genDoc.GenesisBlockHeight < 0 {
+		genDoc.GenesisBlockHeight = 0
 	}
 
 	if genDoc.ConsensusParams == nil {

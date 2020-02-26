@@ -50,6 +50,12 @@ func (bs *BlockStore) Height() int64 {
 	return bs.height
 }
 
+func (bs *BlockStore) SetHeight(height int64) {
+	bs.mtx.Lock()
+	defer bs.mtx.Unlock()
+	bs.height = height
+}
+
 // LoadBlock returns the block with the given height.
 // If no block is found for that height, it returns nil.
 func (bs *BlockStore) LoadBlock(height int64) *types.Block {

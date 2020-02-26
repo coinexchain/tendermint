@@ -559,8 +559,6 @@ func NewNode(config *cfg.Config,
 	logger log.Logger,
 	options ...Option) (*Node, error) {
 
-	types.GenesisBlockHeight = config.GenesisBlockHeight
-
 	blockStore, stateDB, err := initDBs(config, dbProvider)
 	if err != nil {
 		return nil, err
@@ -569,6 +567,10 @@ func NewNode(config *cfg.Config,
 	state, genDoc, err := LoadStateFromDBOrGenesisDocProvider(stateDB, genesisDocProvider)
 	if err != nil {
 		return nil, err
+	}
+
+	if blockStore.Height() == 0 {
+		blockStore.SetHeight(types.GenesisBlockHeight)
 	}
 
 	// Create the proxyApp and establish connections to the ABCI app (consensus, mempool, query).
@@ -1145,6 +1147,7 @@ func LoadStateFromDBOrGenesisDocProvider(
 		// was changed, accidentally or not). Also good for audit trail.
 		saveGenesisDoc(stateDB, genDoc)
 	}
+	types.GenesisBlockHeight = genDoc.GenesisBlockHeight
 	state, err := sm.LoadStateFromDBOrGenesisDoc(stateDB, genDoc)
 	if err != nil {
 		return sm.State{}, nil, err

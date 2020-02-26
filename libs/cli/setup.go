@@ -16,7 +16,6 @@ const (
 	TraceFlag          = "trace"
 	OutputFlag         = "output"
 	EncodingFlag       = "encoding"
-	GenesisBlockHeight = "genesis-block-height"
 )
 
 // Executable is the minimal interface to *corba.Command, so we can

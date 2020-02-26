@@ -82,9 +82,6 @@ proxy_app = "{{ .BaseConfig.ProxyApp }}"
 # A custom human readable name for this node
 moniker = "{{ .BaseConfig.Moniker }}"
 
-# Genesis block height, default is 0
-genesis_block_height = {{ .BaseConfig.GenesisBlockHeight }}
-
 # If this node is many blocks behind the tip of the chain, FastSync
 # allows them to catchup quickly by downloading blocks in parallel
 # and verifying their commits
