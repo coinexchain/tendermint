@@ -155,6 +155,9 @@ type BaseConfig struct { //nolint: maligned
 	// A custom human readable name for this node
 	Moniker string `mapstructure:"moniker"`
 
+	// Genesis Block Height, default is 0
+	GenesisBlockHeight int64 `mapstructure:"genesis_block_height"`
+
 	// If this node is many blocks behind the tip of the chain, FastSync
 	// allows them to catchup quickly by downloading blocks in parallel
 	// and verifying their commits
@@ -218,6 +221,7 @@ func DefaultBaseConfig() BaseConfig {
 		PrivValidatorState: defaultPrivValStatePath,
 		NodeKey:            defaultNodeKeyPath,
 		Moniker:            defaultMoniker,
+		GenesisBlockHeight: 0,
 		ProxyApp:           "tcp://127.0.0.1:26658",
 		ABCI:               "socket",
 		LogLevel:           DefaultPackageLogLevels(),

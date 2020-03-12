@@ -8,6 +8,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -569,6 +570,13 @@ func NewNode(config *cfg.Config,
 	state, genDoc, err := LoadStateFromDBOrGenesisDocProvider(stateDB, genesisDocProvider)
 	if err != nil {
 		return nil, err
+	}
+	if config.GenesisBlockHeight == 0 {
+		config.GenesisBlockHeight = types.GenesisBlockHeight
+		configFilePath := filepath.Join(config.RootDir, "config/config.toml")
+		cfg.WriteConfigFile(configFilePath, config)
+	} else if config.GenesisBlockHeight != types.GenesisBlockHeight {
+		panic("genesis height not same between genesis doc and node config")
 	}
 
 	blockStore, err := initBlockStoreDB(config, dbProvider)
