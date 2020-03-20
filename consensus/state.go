@@ -558,6 +558,11 @@ func (cs *ConsensusState) updateToState(state sm.State) {
 		cs.StartTime = cs.config.Commit(cs.CommitTime)
 	}
 
+	for i, val := range validators.Validators {
+		cs.Logger.Debug(fmt.Sprintf("Validator#%d", i),
+			fmt.Sprintf("%s(%s)", val.Address, val.PubKey),
+			fmt.Sprintf("%d", val.VotingPower))
+	}
 	cs.Validators = validators
 	cs.Proposal = nil
 	cs.ProposalBlock = nil
