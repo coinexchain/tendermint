@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"github.com/pkg/errors"
+	_ "github.com/tendermint/tendermint/types"
 
 	log "github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/lite"
@@ -31,12 +32,12 @@ func NewVerifier(
 	cert.SetLogger(logger) // Sets logger recursively.
 
 	// TODO: Make this more secure, e.g. make it interactive in the console?
-	_, err := trust.LatestFullCommit(chainID, 1, 1<<63-1)
+	_, err := trust.LatestFullCommit(chainID, 4545601, 1<<63-1)
 	if err != nil {
 		logger.Info("lite/proxy/NewVerifier found no trusted full commit, initializing from source from height 1...")
-		fc, err := source.LatestFullCommit(chainID, 1, 1)
+		fc, err := source.LatestFullCommit(chainID, 4545601, 4545601)
 		if err != nil {
-			return nil, errors.Wrap(err, "fetching source full commit @ height 1")
+			return nil, errors.Wrap(err, "fetching source full commit @ height 4545601")
 		}
 		err = trust.SaveFullCommit(fc)
 		if err != nil {
