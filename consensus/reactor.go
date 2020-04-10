@@ -57,7 +57,7 @@ func NewConsensusReactor(consensusState *ConsensusState, fastSync bool, options 
 		metrics:  NopMetrics(),
 	}
 	conR.updateFastSyncingMetric()
-	conR.BaseReactor = *p2p.NewBaseReactor("ConsensusReactor", conR)
+	conR.BaseReactor = *p2p.NewBaseReactor("Consensus", conR)
 
 	for _, option := range options {
 		option(conR)
@@ -104,7 +104,6 @@ func (conR *ConsensusReactor) SwitchToConsensus(state sm.State, blocksSynced int
 	// NOTE: The line below causes broadcastNewRoundStepRoutine() to
 	// broadcast a NewRoundStepMessage.
 	conR.conS.updateToState(state)
-	fmt.Printf("here %#v\n", state)
 
 	conR.mtx.Lock()
 	conR.fastSync = false
