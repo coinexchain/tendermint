@@ -39,7 +39,7 @@ var (
 	msgQueueSize = 1000
 )
 
-const AdjustTimeoutCommit = false
+const AdjustTimeoutCommit = true
 
 // msgs from the reactor which may update the state
 type msgInfo struct {
@@ -1438,11 +1438,14 @@ func (cs *ConsensusState) finalizeCommit(height int64) {
 		if cs.lastBlockTime.Unix() != 0 {
 			diff := block.Header.Time.Sub(cs.lastBlockTime)
 			if diff.Nanoseconds() < cs.config.TargetBlockInterval.Nanoseconds() {
+				cs.Logger.Debug("increment timeout commit")
 				cs.config.IncrTimeoutCommit()
 			} else if diff.Nanoseconds() > cs.config.TargetBlockInterval.Nanoseconds() {
+				cs.Logger.Debug("decrement timeout commit")
 				cs.config.DecrTimeoutCommit()
 			}
 		}
+		cs.Logger.Debug("real block time interval is %d ms", block.Header.Time.Sub(cs.lastBlockTime).Microseconds())
 		cs.lastBlockTime = block.Header.Time
 	}
 

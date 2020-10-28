@@ -322,6 +322,7 @@ version = "{{ .FastSync.Version }}"
 
 wal_file = "{{ js .Consensus.WalPath }}"
 
+target_block_interval = "{{ .Consensus.TargetBlockInterval }}"
 timeout_propose = "{{ .Consensus.TimeoutPropose }}"
 timeout_propose_delta = "{{ .Consensus.TimeoutProposeDelta }}"
 timeout_prevote = "{{ .Consensus.TimeoutPrevote }}"
@@ -329,6 +330,9 @@ timeout_prevote_delta = "{{ .Consensus.TimeoutPrevoteDelta }}"
 timeout_precommit = "{{ .Consensus.TimeoutPrecommit }}"
 timeout_precommit_delta = "{{ .Consensus.TimeoutPrecommitDelta }}"
 timeout_commit = "{{ .Consensus.TimeoutCommit }}"
+timeout_commit_upper = "{{ .Consensus.TimeoutCommitUpper }}"
+timeout_commit_lower = "{{ .Consensus.TimeoutCommitLower }}"
+timeout_commit_delta = "{{ .Consensus.TimeoutCommitDelta }}"
 
 # Make progress as soon as we have all the precommits (as if TimeoutCommit = 0)
 skip_timeout_commit = {{ .Consensus.SkipTimeoutCommit }}
